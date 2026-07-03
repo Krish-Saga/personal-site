@@ -13,6 +13,7 @@ h2 {
   font-size: 30px;
 }
 h3 {
+  font-size: 22px;
   color: #c4a7e7;
 }
 ul {
@@ -34,4 +35,11 @@ li {
 p {
   font-size: 15px;
   color: aqua;
+}
+.Container {
+  padding: 40px;
+  margin: 10px;
+  background-color: #6e6a86;
+  border: 2px solid black;
+  border-radius: 10px;
 }
