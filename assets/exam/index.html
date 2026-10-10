@@ -911,6 +911,29 @@ body.motion-off[data-theme="aurora"]::before{animation:none!important}
 .red-bar{background:linear-gradient(180deg,#ff8595,#f05260)}
 .grey-bar{background:linear-gradient(180deg,#aab2c8,#9ca3af)}
 
+/* --- Question & option presentation (every test) ---------------------------- */
+#exam .qtext{white-space:normal;line-height:1.78;font-size:clamp(16px,1.6vw,19.5px);letter-spacing:.002em;padding:22px 24px;margin-bottom:16px}
+#exam .qtext p{margin:0 0 .85em}
+#exam .qtext p:last-child{margin-bottom:0}
+#exam .qtext:empty{display:none}
+#exam .qtop{margin-bottom:18px}
+#exam #options{display:grid;gap:12px;margin-top:22px}
+#exam .option{display:flex;align-items:flex-start;gap:13px;padding:16px 18px;border-radius:14px;line-height:1.62;min-height:54px}
+#exam .option>input{margin-top:3px;flex:0 0 auto}
+#exam .option>span{flex:1;min-width:0;overflow-wrap:anywhere}
+#exam .option b{display:inline-grid;place-items:center;min-width:26px;height:26px;margin-right:9px;border-radius:8px;background:var(--surface-soft);border:1px solid var(--line);color:var(--blue);font-weight:800;font-size:12px;vertical-align:middle}
+#exam .option:has(input:checked) b{background:var(--blue);color:#0d1128;border-color:var(--blue)}
+.reviewquestion{white-space:normal;line-height:1.75}
+.reviewquestion p{margin:0 0 .8em}
+.reviewquestion p:last-child{margin-bottom:0}
+.reviewoptions{gap:11px}
+.reviewoption{padding:14px 16px;line-height:1.6}
+@media(max-width:560px){
+  #exam .qtext{padding:16px;font-size:16.5px}
+  #exam .option{padding:14px;gap:10px}
+  #exam #options{gap:10px;margin-top:16px}
+}
+
 /* --- Tablet + test responsiveness fixes ------------------------------------- */
 body:has(#exam:not(.hidden)){padding-bottom:100px}
 @media(min-width:821px) and (max-width:1024px){
@@ -934,6 +957,43 @@ body:has(#exam:not(.hidden)){padding-bottom:100px}
   body[data-theme="aurora"]::before{filter:blur(22px);opacity:.7}
   body[data-theme="aurora"] .app-header{backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px)}
 }
+
+/* Admin panel (password-gated) — additive, theme-aware */
+.admin-backdrop{position:fixed;inset:0;z-index:100050;display:grid;place-items:center;padding:18px;background:rgba(6,8,16,.74);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);overflow:auto}
+.admin-backdrop.hidden{display:none}
+.admin-panel{width:min(780px,100%);max-height:90vh;overflow:auto;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:20px;box-shadow:0 30px 90px rgba(0,0,0,.5);padding:22px}
+.admin-head{display:flex;align-items:center;gap:14px;margin-bottom:6px}
+.admin-lock{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:22px;background:linear-gradient(135deg,var(--blue),#7fe0c8);color:#0d1128;flex:0 0 auto}
+.admin-head h2{margin:0;font-size:19px}
+.admin-head p{margin:2px 0 0}
+.admin-close{margin-left:auto;border:1px solid var(--line);background:var(--surface-soft);color:var(--ink);border-radius:10px;width:36px;height:36px;font-size:16px;cursor:pointer}
+.admin-login{display:grid;gap:10px;margin-top:14px;max-width:360px}
+.admin-input{padding:11px 13px;border:1px solid var(--line);border-radius:10px;background:var(--control);color:var(--ink);font:inherit}
+.admin-btn{border:0;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer;background:var(--blue);color:#0d1128;font:inherit;font-weight:700}
+.admin-btn.ghost{background:var(--surface-soft);color:var(--ink);border:1px solid var(--line)}
+.admin-btn.danger{background:color-mix(in srgb,var(--red) 16%,var(--surface));color:var(--red);border:1px solid color-mix(in srgb,var(--red) 35%,var(--line))}
+.admin-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 6px}
+.admin-error{font-size:12px;min-height:16px;margin:2px 0 8px}
+.admin-cats{display:grid;gap:12px}
+.admin-cat{border:1px solid var(--line);border-radius:14px;background:var(--surface-soft);padding:12px}
+.admin-cat-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.admin-cat-head strong{font-size:14px}
+.admin-cat-head .small{color:var(--muted);font-size:11px}
+.admin-spacer{margin-left:auto}
+.admin-paper-list{margin-top:10px;display:grid;gap:6px}
+.admin-paper{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);font-size:12px}
+.admin-paper>span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:52%}
+.admin-badge{font-size:10px;font-weight:800;letter-spacing:.05em;padding:3px 7px;border-radius:999px;background:color-mix(in srgb,var(--blue) 16%,var(--surface));color:var(--blue)}
+.admin-note{font-size:12px;color:var(--muted);line-height:1.6;margin-top:14px;border-top:1px solid var(--line);padding-top:12px}
+
+/* admin-added category cards must always be visible (skip scroll-reveal) */
+.sectioncard[data-cat]{opacity:1!important;transform:none!important}
+
+/* sub-category blocks inside the admin panel */
+.admin-sub{border:1px dashed var(--line);border-radius:12px;padding:10px;margin-top:10px;background:color-mix(in srgb,var(--surface) 55%,transparent)}
+.admin-sub-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.admin-sub-name{font-weight:700;font-size:13px}
+.admin-sub .admin-btn{padding:7px 10px;font-size:12px}
 
 </style>
 </head>
@@ -57620,7 +57680,7 @@ let currentReadingChapter="all",readingAutoLoadPromise=null,readingFolderScanned
 // Runtime state for the exam palette and timer. These must exist before the first question renders.
 let markedQuestions=new Set(),visitedQuestions=new Set(),timerPaused=false;
 let folderOpen=false;
-const SECTION_LABELS={chapterwise:"ENGLISH - CHAPTERWISE TEST",english:"Previous Year Sectional Tests - English",gk:"Previous Year Sectional Tests GK-GS",reading:"Reading Comprehension",mock:"Full Mock Tests"};
+var SSC_CUSTOM={},SSC_ACTIVE_SUB=null;const SECTION_LABELS={chapterwise:"ENGLISH - CHAPTERWISE TEST",english:"Previous Year Sectional Tests - English",gk:"Previous Year Sectional Tests GK-GS",reading:"Reading Comprehension",mock:"Full Mock Tests"};
 const READING_LABELS={cloze:"Cloze Test",passage:"Passage",rearrangement:"Sentence Rearrangement",uncategorized:"Uncategorized"};
 function openSection(which){
  playSfx("whoosh");currentSection=which;currentReadingChapter="all";folderOpen=false;papers=papersBySection[which]||[];
@@ -57634,7 +57694,7 @@ function goHome(){folderOpen=false;currentReadingChapter="all";show("home");upda
 function openCurrentFolder(chapterKey=null){
  if(currentSection==="reading")currentReadingChapter=chapterKey||"uncategorized";
  folderOpen=true;papers=papersBySection[currentSection]||[];
- const title=currentSection==="reading"?(READING_LABELS[currentReadingChapter]||"Uncategorized"):(currentSection==="chapterwise"||currentSection==="mock"?"Uncategorized":"SSC MTS 2025");
+ const title=currentSection==="reading"?(READING_LABELS[currentReadingChapter]||"Uncategorized"):(SSC_CUSTOM[currentSection]?"Uploaded":(currentSection==="chapterwise"||currentSection==="mock"?"Uncategorized":"SSC MTS 2025"));
  $("sectionHeading").textContent=title;$("paperFolderTitle").textContent=title;
  const paths=folderPathForCurrentSection();$("paperFolderSubtitle").textContent=paths.slice(1).join(" / ")+" · papers are listed inside this folder.";
  $("search").value="";updateFolderNavigationUI();updateSectionFolderPath();updateSectionLoadStatus();renderPapers();playSfx("select");scrollPageToTop();
@@ -57667,14 +57727,15 @@ function htmlToText(value){
  doc.querySelectorAll("p,div,li,br").forEach(el=>{if(el.tagName==="BR")el.replaceWith("\n");else el.insertAdjacentText("beforebegin","\n")});
  return (doc.body.textContent||"").replace(/\u00a0/g," ").replace(/[ \t]+\n/g,"\n").replace(/\n{3,}/g,"\n\n").trim();
 }
+function fmtQuestionHTML(t){const out=[];String(t||"").split(/\n+/).forEach(function(par){par=par.trim();if(!par)return;if(/\([a-e]\)/i.test(par)&&par.indexOf("/")>-1){par.split(/\s*\/\s*/).forEach(function(seg){seg=seg.trim();if(seg)out.push("<p>"+esc(seg)+"</p>")})}else out.push("<p>"+esc(par)+"</p>")});return out.join("")||"<p></p>"}
 function normalizeQuestion(q,i){
  const options=[];
  for(let j=1;j<=10;j++){
    const value=q?.[`option_${j}`] ?? q?.[`option${j}`] ?? q?.[`option ${j}`];
    if(value!==undefined && value!==null && String(value).trim()!==""){
      const raw=htmlToText(value);
-     const m=raw.match(/^\s*([A-J])\s*[\).:-]\s*(.*)$/i);
-     options.push({label:m?m[1].toUpperCase():String.fromCharCode(64+j),text:m?m[2].trim():raw,raw:value});
+     let m=raw.match(/^\s*([A-J])\s*[\).:-]\s*(.*)$/i);if(!m)m=raw.match(/^\s*\(([A-J])\)\s*(.*)$/i);
+     options.push({label:m?m[1].toUpperCase():String.fromCharCode(64+j),text:(m&&m[2].trim())?m[2].trim():raw,raw:value});
    }
  }
  if(!options.length){
@@ -57865,7 +57926,7 @@ function setRootLibraryState(title,message){const t=$("rootLibraryTitle"),m=$("r
 function specForCurrentFolder(){return LOCAL_FOLDER_SPECS.find(s=>s.section===currentSection&&(currentSection!=="reading"||s.chapter===currentReadingChapter));}
 function paperCountForCurrentFolder(){if(currentSection==="reading"&&folderOpen)return papersBySection.reading.filter(p=>p.chapter===currentReadingChapter).length;return (papersBySection[currentSection]||[]).length;}
 function folderPathForCurrentSection(){
- const root="Test papers SSC";
+ const root="Test papers SSC";  if(SSC_ACTIVE_SUB&&folderOpen)return [root,SECTION_LABELS[currentSection]||currentSection,SSC_ACTIVE_SUB];  if(SSC_CUSTOM[currentSection])return [root,SSC_CUSTOM[currentSection],...(folderOpen?["Uploaded"]:[])];
  if(currentSection==="chapterwise")return [root,"ENGLISH - CHAPTERWISE TEST",...(folderOpen?["Uncategorized"]:[])];
  if(currentSection==="english")return [root,"Previous Year Sectional Tests - English",...(folderOpen?["SSC MTS 2025"]:[])];
  if(currentSection==="gk")return [root,"Previous Year Sectional Tests GK-GS",...(folderOpen?["SSC MTS 2025"]:[])];
@@ -57909,7 +57970,7 @@ function updateFolderNavigationUI(){
  $("backToChildFolder").classList.toggle("hidden",!folderOpen);
  if(!reading){const spec=LOCAL_FOLDER_SPECS.find(s=>s.section===currentSection);const label=spec?.path.at(-1)||(currentSection==="chapterwise"?"Uncategorized":"SSC MTS 2025");$("childFolderName").textContent=label;$("childFolderDetails").textContent=folderPathForCurrentSection().slice(1).join(" / ")+" · open to view the JSON papers inside.";$("childFolderCount").textContent=`${papersBySection[currentSection]?.length||0} papers`;$("childFolderNavigator").setAttribute("aria-label",`Open ${label} folder`);}
  const count=paperCountForCurrentFolder();$("paperFolderCount").textContent=`${count} paper${count===1?"":"s"}`;
- if(folderOpen){const label=currentSection==="reading"?(READING_LABELS[currentReadingChapter]||"Uncategorized"):(currentSection==="chapterwise"?"Uncategorized":"SSC MTS 2025");$("paperFolderTitle").textContent=label;$("sectionHeading").textContent=label;$("paperFolderSubtitle").textContent=folderPathForCurrentSection().slice(1).join(" / ")+" · papers are listed inside this folder.";}
+ if(folderOpen){const label=currentSection==="reading"?(READING_LABELS[currentReadingChapter]||"Uncategorized"):(SSC_ACTIVE_SUB||(currentSection==="chapterwise"?"Uncategorized":(SSC_CUSTOM[currentSection]?"Uploaded":"SSC MTS 2025")));$("paperFolderTitle").textContent=label;$("sectionHeading").textContent=label;$("paperFolderSubtitle").textContent=folderPathForCurrentSection().slice(1).join(" / ")+" · papers are listed inside this folder.";}
  else $("sectionHeading").textContent=SECTION_LABELS[currentSection]||currentSection;
 }
 function updateSectionLoadStatus(customMessage=null,forceError=false){
@@ -58116,7 +58177,7 @@ function renderQuestion(){
  $("qCounter").textContent=`Question ${current+1} of ${active.questions.length}`;
  const sectionBanner=$("mockSectionBanner"),sectionNav=$("mockSectionNav");if(sectionBanner&&sectionNav){if(active.section==="mock"){const isEnglishSection=current<25;sectionBanner.style.display="block";sectionNav.style.display="flex";sectionBanner.textContent=isEnglishSection?`SECTION 1 · ENGLISH · QUESTIONS 1–${Math.min(25,active.questions.length)}`:`SECTION 2 · GK/GS · QUESTIONS 26–${active.questions.length}`;sectionBanner.style.borderLeft="4px solid "+(isEnglishSection?"#3b82f6":"#16a34a");sectionNav.querySelectorAll("button[data-mock-start]").forEach(b=>{const startAt=Number(b.dataset.mockStart);b.classList.toggle("active",(startAt===0&&isEnglishSection)||(startAt===25&&!isEnglishSection));b.disabled=startAt>=active.questions.length;});}else{sectionBanner.style.display="none";sectionNav.style.display="none";}}
  const visibleQuestion=htmlToText(q.text||pick(raw,["question","question_text","questionText","title","ques","q","text"]))||`Question ${current+1}`;
- $("qText").textContent=visibleQuestion;
+ $("qText").innerHTML=fmtQuestionHTML(visibleQuestion);
  $("qStatus").textContent=answers[current]===null?"Not answered":"Answered";
  $("options").innerHTML="";
  const questionOptions=Array.isArray(q.options)?q.options:[];
@@ -58182,7 +58243,7 @@ function finishTest(auto=false,confirmed=false){if(!active||$("exam").classList.
    const el=document.createElement("article");el.className="reviewitem";el.dataset.status=status;
    const top=document.createElement("div");top.className="reviewtop";
    top.innerHTML=`<span class="reviewnum">Question ${i+1} of ${active.questions.length}</span><span class="reviewbadge ${status==="correct"?"good":status==="wrong"?"bad":"skip"}">${statusLabel}</span>`;
-   const question=document.createElement("p");question.className="reviewquestion";question.textContent=q.text;
+   const question=document.createElement("div");question.className="reviewquestion";question.innerHTML=fmtQuestionHTML(q.text);
    const options=document.createElement("div");options.className="reviewoptions";
    q.options.forEach((o,j)=>{
      const row=document.createElement("div");row.className="reviewoption";
@@ -58462,6 +58523,379 @@ function scrollPageToTop(){
 })();
 </script>
 
+<script>
+/* SSC test-series Admin panel — additive module (v2).
+   - password verified against a SHA-256 hash (no plaintext in the file)
+   - categories AND sub-categories (add / remove)
+   - upload a single JSON paper, or a whole FOLDER of JSON papers
+   - sub-category browsing inside the library (grid + filtered papers)
+   - "export website" bakes everything into a fresh HTML file
+   It only calls the host app's own functions; it never rewrites its logic. */
+(function () {
+  "use strict";
+  var SALT = "ssc-mts::";
+  var PASS_HASH = "9e760a0c034f27533496bedb0bfe6bff975a9e262ace645f46eff403bfe278d2";
+  var CORE = ["chapterwise", "english", "gk", "reading", "mock"];
+
+  /* ---------- compact SHA-256 (works offline, no secure-context needed) ---------- */
+  function sha256(ascii) {
+    function rr(v, a) { return (v >>> a) | (v << (32 - a)); }
+    var mp = Math.pow, mw = mp(2, 32), result = "";
+    var words = [], asciiBitLength = ascii.length * 8;
+    var hash = sha256.h = sha256.h || [], k = sha256.k = sha256.k || [], pc = k.length;
+    var isComposite = {};
+    for (var c = 2; pc < 64; c++) {
+      if (!isComposite[c]) {
+        for (var i = 0; i < 313; i += c) isComposite[i] = c;
+        hash[pc] = (mp(c, .5) * mw) | 0; k[pc++] = (mp(c, 1 / 3) * mw) | 0;
+      }
+    }
+    ascii += "\x80";
+    while (ascii.length % 64 - 56) ascii += "\x00";
+    for (i = 0; i < ascii.length; i++) { var j = ascii.charCodeAt(i); if (j >> 8) return; words[i >> 2] |= j << ((3 - i) % 4) * 8; }
+    words[words.length] = (asciiBitLength / mw) | 0; words[words.length] = asciiBitLength;
+    for (j = 0; j < words.length;) {
+      var w = words.slice(j, j += 16), oldHash = hash; hash = hash.slice(0, 8);
+      for (i = 0; i < 64; i++) {
+        var w15 = w[i - 15], w2 = w[i - 2], a = hash[0], e = hash[4];
+        var t1 = hash[7] + (rr(e, 6) ^ rr(e, 11) ^ rr(e, 25)) + ((e & hash[5]) ^ ((~e) & hash[6])) + k[i]
+          + (w[i] = (i < 16) ? w[i] : (w[i - 16] + (rr(w15, 7) ^ rr(w15, 18) ^ (w15 >>> 3)) + w[i - 7] + (rr(w2, 17) ^ rr(w2, 19) ^ (w2 >>> 10))) | 0);
+        var t2 = (rr(a, 2) ^ rr(a, 13) ^ rr(a, 22)) + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));
+        hash = [(t1 + t2) | 0].concat(hash); hash[4] = (hash[4] + t1) | 0;
+      }
+      for (i = 0; i < 8; i++) hash[i] = (hash[i] + oldHash[i]) | 0;
+    }
+    for (i = 0; i < 8; i++) for (j = 3; j + 1; j--) { var b = (hash[i] >> (j * 8)) & 255; result += ((b < 16) ? 0 : "") + b.toString(16); }
+    return result;
+  }
+
+  /* ---------- helpers ---------- */
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]; }); }
+  function lsGet(k, d) { try { var v = JSON.parse(localStorage.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }
+  function slugify(s) { return String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40); }
+  function baked() { var b = window.__SSC_ADMIN__; return (b && typeof b === "object") ? b : { specs: [], papers: [] }; }
+  function collect() {
+    var b = baked();
+    var specs = (Array.isArray(b.specs) ? b.specs : []).concat(lsGet("sscAdminSpecs", []));
+    var papers = (Array.isArray(b.papers) ? b.papers : []).concat(lsGet("sscAdminPapers", []));
+    var seen = {}, S = [];
+    specs.forEach(function (s) { var k = s && (s.label || s.section); if (s && s.section && !seen[k]) { seen[k] = 1; S.push(s); } });
+    var seenp = {}, P = [];
+    papers.forEach(function (p) { if (p && p.path && !seenp[p.path]) { seenp[p.path] = 1; P.push(p); } });
+    return { specs: S, papers: P };
+  }
+  function specLabelFor(p) { try { var sp = mapRelativePathToSpec(p.fileName || p.embeddedKey || p.path); return sp ? sp.label : null; } catch (e) { return null; } }
+  function subOf(spec) { return spec.subLabel || spec.path[spec.path.length - 1]; }
+
+  /* ---------- merge uploaded / baked data into the live library ---------- */
+  function addCards(specs) {
+    var host = document.querySelector(".sectioncards"); if (!host) return;
+    var done = {};
+    specs.forEach(function (sp) {
+      if (!sp || !sp.section || done[sp.section] || host.querySelector('[data-cat="' + sp.section + '"]')) return;
+      done[sp.section] = 1;
+      var art = document.createElement("article"); art.className = "sectioncard"; art.setAttribute("data-cat", sp.section);
+      art.innerHTML = '<div class="sectionicon purple" style="font-size:24px">▤</div><div class="sectionname">' + esc(sp.sectionLabel || sp.section) + '</div><button class="btn dark" type="button">Open ↗</button>';
+      art.querySelector("button").onclick = function () { try { openSection(sp.section); } catch (e) {} };
+      host.appendChild(art);
+    });
+  }
+  function merge() {
+    var cfg = collect();
+    if (!cfg.specs.length && !cfg.papers.length) return;
+    cfg.specs.forEach(function (sp) {
+      try {
+        if (!LOCAL_FOLDER_SPECS.some(function (s) { return s.label === sp.label; })) LOCAL_FOLDER_SPECS.push(sp);
+        if (sp.sectionLabel) SECTION_LABELS[sp.section] = sp.sectionLabel;
+        if (!papersBySection[sp.section]) papersBySection[sp.section] = [];
+        SSC_CUSTOM[sp.section] = sp.sectionLabel || SECTION_LABELS[sp.section] || sp.section;
+      } catch (e) {}
+    });
+    cfg.papers.forEach(function (file) {
+      try {
+        var spec = mapRelativePathToSpec(file.path); if (!spec) return;
+        embeddedQuestionTextByPath.set(file.path, file.content);
+        ingestPaperMetadata(file, spec);
+      } catch (e) {}
+    });
+    addCards(cfg.specs);
+    try { papers = papersBySection[currentSection] || []; updateFolderNavigationUI(); updateSectionFolderPath(); renderPapers(); } catch (e) {}
+  }
+  function ready(fn) { var n = 0; var iv = setInterval(function () { n++; var done = false; try { done = (typeof folderScanComplete !== "undefined") && folderScanComplete; } catch (e) {} if (done || n > 80) { clearInterval(iv); fn(); } }, 250); }
+
+  /* ---------- sub-category browsing in the library ---------- */
+  function ensureSubBox() {
+    var box = $("sscSubcats");
+    if (!box) {
+      box = document.createElement("div"); box.id = "sscSubcats"; box.className = "sectioncards hidden";
+      var pv = $("paperListView"); var anchor = pv || $("sectionFolderPath");
+      if (anchor && anchor.parentNode) anchor.parentNode.insertBefore(box, anchor); else document.querySelector(".wrap").appendChild(box);
+    }
+    return box;
+  }
+  function renderSubcats(which) {
+    try { SSC_ACTIVE_SUB = null; } catch (e) {}
+    var specs = LOCAL_FOLDER_SPECS.filter(function (s) { return s.section === which; });
+    var box = ensureSubBox();
+    var nav = $("childFolderNavigator"), pv = $("paperListView"), rc = $("readingChapters");
+    if (specs.length <= 1) { box.classList.add("hidden"); box.innerHTML = ""; if (nav) nav.style.display = ""; return; }
+    if (nav) nav.style.display = "none";
+    if (rc) rc.classList.add("hidden");
+    if (pv) pv.classList.add("hidden");
+    box.classList.remove("hidden");
+    var all = papersBySection[which] || [];
+    box.innerHTML = specs.map(function (sp) {
+      var cnt = all.filter(function (p) { return specLabelFor(p) === sp.label; }).length;
+      return '<article class="sectioncard" data-sub="' + esc(sp.label) + '"><div class="sectionicon purple" style="font-size:22px">📁</div>'
+        + '<div class="sectionname">' + esc(subOf(sp)) + '</div><span class="small" style="color:var(--muted)">' + cnt + ' papers</span>'
+        + '<button class="btn dark" type="button">Open ↗</button></article>';
+    }).join("");
+    box.querySelectorAll("[data-sub]").forEach(function (el) { el.querySelector("button").onclick = function () { openSubcat(which, el.getAttribute("data-sub")); }; });
+  }
+  function openSubcat(which, label) {
+    try {
+      folderOpen = true;
+      try { SSC_ACTIVE_SUB = String(label).split("/").pop().trim(); } catch (e) {}
+      papers = (papersBySection[which] || []).filter(function (p) { return specLabelFor(p) === label; });
+      var box = $("sscSubcats"); if (box) box.classList.add("hidden");
+      var name = label.split("/").pop().trim();
+      if ($("sectionHeading")) $("sectionHeading").textContent = name;
+      if ($("paperFolderTitle")) $("paperFolderTitle").textContent = name;
+      updateFolderNavigationUI(); updateSectionFolderPath(); updateSectionLoadStatus(); renderPapers();
+      if ($("paperListView")) $("paperListView").classList.remove("hidden");
+      if (typeof scrollPageToTop === "function") scrollPageToTop();
+    } catch (e) {}
+  }
+  function installBrowserHooks() {
+    if (window.openSection && !window.openSection.__subHooked) {
+      var o = window.openSection;
+      var w = function (which) { var r = o.apply(this, arguments); try { renderSubcats(which); } catch (e) {} return r; };
+      w.__subHooked = true; window.openSection = w;
+    }
+    var back = $("backToChildFolder");
+    if (back && !back.__subHooked) { back.__subHooked = true; back.addEventListener("click", function () { setTimeout(function () { try { renderSubcats(currentSection); } catch (e) {} }, 0); }); }
+  }
+
+  /* ---------- admin UI ---------- */
+  function unlocked() { try { return sessionStorage.getItem("sscAdminUnlocked") === "1"; } catch (e) { return false; } }
+  function msg(t, bad) { var m = $("adminMsg"); if (m) { m.textContent = t || ""; m.style.color = bad ? "var(--red)" : "var(--green)"; } }
+  function build() {
+    if ($("adminBackdrop")) return;
+    var bd = document.createElement("div"); bd.className = "admin-backdrop hidden"; bd.id = "adminBackdrop";
+    bd.innerHTML = '<div class="admin-panel" role="dialog" aria-modal="true" aria-label="Admin panel">'
+      + '<div class="admin-head"><div class="admin-lock">🔐</div><div><h2>Admin panel</h2><p class="small">Manage categories, sub-categories and question papers.</p></div><button class="admin-close" id="adminClose" aria-label="Close">✕</button></div>'
+      + '<div class="admin-login" id="adminLogin"><input class="admin-input" id="adminPass" type="password" placeholder="Admin password" autocomplete="off"><button class="admin-btn" id="adminUnlock" type="button">Unlock</button><div class="admin-error" id="adminErr"></div></div>'
+      + '<div id="adminBody" class="hidden"></div></div>';
+    document.body.appendChild(bd);
+    $("adminClose").onclick = closeAdmin;
+    $("adminUnlock").onclick = tryUnlock;
+    $("adminPass").addEventListener("keydown", function (e) { if (e.key === "Enter") tryUnlock(); });
+    bd.addEventListener("click", function (e) { if (e.target === bd) closeAdmin(); });
+  }
+  function catBlocks() {
+    var bySec = {};
+    LOCAL_FOLDER_SPECS.forEach(function (sp) {
+      if (!bySec[sp.section]) bySec[sp.section] = { section: sp.section, label: SECTION_LABELS[sp.section] || sp.section, specs: [], custom: CORE.indexOf(sp.section) < 0 };
+      bySec[sp.section].specs.push(sp);
+    });
+    return bySec;
+  }
+  function renderBody() {
+    var body = $("adminBody"); if (!body) return;
+    var cfg = collect();
+    body.innerHTML = '<div class="admin-toolbar">'
+      + '<button class="admin-btn" id="adminAddCat" type="button">+ Add category</button>'
+      + '<button class="admin-btn ghost" id="adminExport" type="button">⬇ Export website (bake in)</button>'
+      + '<button class="admin-btn danger" id="adminReset" type="button">Reset uploaded data</button></div>'
+      + '<div class="admin-error" id="adminMsg"></div><div class="admin-cats" id="adminCats"></div>'
+      + '<p class="admin-note"><b>How it works:</b> uploads are saved in this browser and appear in the library right away. To publish them for everyone, click <b>Export website</b> and upload the downloaded file to your host. You can upload a single JSON paper, or a whole folder of JSONs at once.</p>';
+    var cats = $("adminCats");
+    var bySec = catBlocks();
+    Object.keys(bySec).forEach(function (k) {
+      var sec = bySec[k];
+      var el = document.createElement("div"); el.className = "admin-cat";
+      var head = '<div class="admin-cat-head"><strong>' + esc(sec.label) + '</strong><span class="admin-spacer"></span>'
+        + '<button class="admin-btn" type="button" data-addsub="' + esc(sec.section) + '">+ Add sub-category</button>'
+        + (sec.custom ? '<button class="admin-btn danger" type="button" data-delcat="' + esc(sec.section) + '">Delete category</button>' : '')
+        + '</div>';
+      var subs = sec.specs.map(function (sp) {
+        var ps = cfg.papers.filter(function (p) { return p.path.indexOf(sp.path.join("/") + "/") === 0; });
+        var rows = ps.length ? ps.map(function (p) {
+          return '<div class="admin-paper"><span>' + esc(p.title || p.path) + '</span><span class="admin-badge">' + esc((p.language || "en").toUpperCase()) + '</span><span class="small">' + (p.questionCount || 0) + ' Q</span><span class="admin-spacer"></span><button class="admin-btn danger" type="button" data-delpaper="' + esc(p.path) + '">Remove</button></div>';
+        }).join("") : '<span class="small" style="color:var(--muted)">No papers yet.</span>';
+        return '<div class="admin-sub"><div class="admin-sub-head"><span class="admin-sub-name">📁 ' + esc(subOf(sp)) + '</span><span class="small">' + ps.length + ' paper(s)</span><span class="admin-spacer"></span>'
+          + '<button class="admin-btn" type="button" data-upfolder="' + esc(sp.label) + '">+ Upload folder</button>'
+          + '<button class="admin-btn ghost" type="button" data-uppaper="' + esc(sp.label) + '">+ Upload paper</button>'
+          + '<button class="admin-btn danger" type="button" data-delsub="' + esc(sp.label) + '">Delete sub-category</button>'
+          + '</div><div class="admin-paper-list">' + rows + '</div></div>';
+      }).join("");
+      el.innerHTML = head + subs;
+      cats.appendChild(el);
+    });
+    $("adminAddCat").onclick = addCategory;
+    $("adminExport").onclick = exportSite;
+    $("adminReset").onclick = resetData;
+    body.querySelectorAll("[data-addsub]").forEach(function (b) { b.onclick = function () { addSub(b.getAttribute("data-addsub")); }; });
+    body.querySelectorAll("[data-delcat]").forEach(function (b) { b.onclick = function () { deleteCategory(b.getAttribute("data-delcat")); }; });
+    body.querySelectorAll("[data-delsub]").forEach(function (b) { b.onclick = function () { deleteSub(b.getAttribute("data-delsub")); }; });
+    body.querySelectorAll("[data-delpaper]").forEach(function (b) { b.onclick = function () { removePaper(b.getAttribute("data-delpaper")); }; });
+    body.querySelectorAll("[data-uppaper]").forEach(function (b) { b.onclick = function () { uploadPaper(b.getAttribute("data-uppaper")); }; });
+    body.querySelectorAll("[data-upfolder]").forEach(function (b) { b.onclick = function () { uploadFolder(b.getAttribute("data-upfolder")); }; });
+  }
+  function showBody() { $("adminLogin").classList.add("hidden"); $("adminBody").classList.remove("hidden"); renderBody(); }
+  function tryUnlock() {
+    var v = ($("adminPass") || {}).value || "";
+    var ok = false; try { ok = (sha256(SALT + v) === PASS_HASH); } catch (e) {}
+    if (ok) { try { sessionStorage.setItem("sscAdminUnlocked", "1"); } catch (e) {} showBody(); }
+    else { $("adminErr").textContent = "Incorrect password."; }
+  }
+  function openAdmin() {
+    build(); $("adminBackdrop").classList.remove("hidden");
+    if (unlocked()) showBody();
+    else { $("adminBody").classList.add("hidden"); $("adminLogin").classList.remove("hidden"); setTimeout(function () { var p = $("adminPass"); if (p) p.focus(); }, 60); }
+  }
+  function closeAdmin() { var b = $("adminBackdrop"); if (b) b.classList.add("hidden"); }
+
+  /* ---------- data actions ---------- */
+  function addCategory() {
+    var name = (window.prompt("New category name:") || "").trim(); if (!name) return;
+    var s = slugify(name) || ("cat" + Date.now());
+    var specs = lsGet("sscAdminSpecs", []);
+    if (CORE.indexOf(s) >= 0 || specs.some(function (x) { return x.section === s; })) s = s + "-" + Math.floor(Math.random() * 900 + 100);
+    specs.push({ section: s, sectionLabel: name, path: [name, "Uploaded"], chapter: null, label: name + " / Uploaded", subLabel: "Uploaded" });
+    lsSet("sscAdminSpecs", specs);
+    merge(); renderBody(); msg("Category added: " + name);
+  }
+  function addSub(section) {
+    var cat = SECTION_LABELS[section] || section;
+    var name = (window.prompt("New sub-category name for \"" + cat + "\":") || "").trim(); if (!name) return;
+    var specs = lsGet("sscAdminSpecs", []);
+    var label = cat + " / " + name;
+    if (LOCAL_FOLDER_SPECS.some(function (s) { return s.label === label; })) { msg("That sub-category already exists.", true); return; }
+    specs.push({ section: section, sectionLabel: cat, path: [cat, name], chapter: null, label: label, subLabel: name });
+    lsSet("sscAdminSpecs", specs);
+    merge(); renderBody(); msg("Sub-category added: " + name);
+  }
+  function isCoreSpec(label) { return LOCAL_FOLDER_SPECS.some(function (s) { return s.label === label && CORE.indexOf(s.section) >= 0 && !(s.subLabel); }); }
+  function deleteSub(label) {
+    var bakedSpec = baked().specs.some(function (s) { return s.label === label; });
+    if (!window.confirm("Delete sub-category \"" + label + "\" and its uploaded papers?")) return;
+    lsSet("sscAdminSpecs", lsGet("sscAdminSpecs", []).filter(function (x) { return x.label !== label; }));
+    lsSet("sscAdminPapers", lsGet("sscAdminPapers", []).filter(function (p) { return p.path.indexOf(label + "/") !== 0; }));
+    if (bakedSpec) msg("Removed from this browser. Re-export to remove it from the published file.", true);
+    location.reload();
+  }
+  function deleteCategory(section) {
+    if (!window.confirm("Delete this category and all its uploaded papers?")) return;
+    lsSet("sscAdminSpecs", lsGet("sscAdminSpecs", []).filter(function (x) { return x.section !== section; }));
+    lsSet("sscAdminPapers", lsGet("sscAdminPapers", []).filter(function (p) { return p.section !== section; }));
+    location.reload();
+  }
+  function removePaper(path) {
+    if (!window.confirm("Remove this paper?")) return;
+    lsSet("sscAdminPapers", lsGet("sscAdminPapers", []).filter(function (p) { return p.path !== path; }));
+    location.reload();
+  }
+  function resetData() {
+    if (!window.confirm("Remove ALL uploaded categories, sub-categories and papers from this browser?")) return;
+    try { localStorage.removeItem("sscAdminSpecs"); localStorage.removeItem("sscAdminPapers"); } catch (e) {}
+    location.reload();
+  }
+  function specByLabel(label) { return LOCAL_FOLDER_SPECS.find(function (s) { return s.label === label; }); }
+  function analyse(text) {
+    var arr = null; try { arr = findArray(parseQuestionJson(text)); } catch (e) {}
+    if (!arr || !arr.length) return null;
+    var withAns = 0, withSol = 0;
+    arr.forEach(function (q) {
+      if (q && (q.answer != null && q.answer !== "")) withAns++;
+      if (q && (q.solution_text || q.solution || q.explanation)) withSol++;
+    });
+    return { count: arr.length, withAns: withAns, withSol: withSol };
+  }
+  function addPaperFile(spec, filename, text, title, lang) {
+    var info = analyse(text); if (!info) return null;
+    var clean = String(filename || "paper.json").replace(/[^a-zA-Z0-9._-]/g, "_");
+    if (!/\.json$/i.test(clean)) clean += ".json";
+    var path = spec.path.concat([clean]).join("/");
+    var file = { path: path, content: text, id: String(Date.now()) + "_" + Math.floor(Math.random() * 1000), title: title, language: lang, chapter: spec.chapter || null, section: spec.section, questionCount: info.count, minutes: 25, marks: info.count * 3 };
+    var papers = lsGet("sscAdminPapers", []).filter(function (p) { return p.path !== path; });
+    papers.push(file); lsSet("sscAdminPapers", papers);
+    return info;
+  }
+  function uploadPaper(label) {
+    var spec = specByLabel(label); if (!spec) { msg("Unknown sub-category.", true); return; }
+    var inp = document.createElement("input"); inp.type = "file"; inp.accept = ".json,application/json";
+    inp.onchange = function () {
+      var f = inp.files && inp.files[0]; if (!f) return;
+      var r = new FileReader();
+      r.onload = function () {
+        var text = String(r.result || "");
+        var info = analyse(text);
+        if (!info) { msg("That file has no recognizable questions (expected a JSON array of question objects).", true); return; }
+        var defTitle = f.name.replace(/\.json$/i, "").replace(/[_-]+/g, " ").slice(0, 70);
+        var title = (window.prompt("Paper title:", defTitle) || defTitle).trim() || defTitle;
+        var lang = (window.prompt("Language (en or hi):", "en") || "en").trim().toLowerCase(); if (lang !== "hi") lang = "en";
+        addPaperFile(spec, f.name, text, title, lang);
+        merge(); renderBody();
+        msg("Uploaded \"" + title + "\": " + info.count + " questions, " + info.withAns + " with answers, " + info.withSol + " with solutions.");
+      };
+      r.readAsText(f);
+    };
+    inp.click();
+  }
+  function uploadFolder(label) {
+    var spec = specByLabel(label); if (!spec) { msg("Unknown sub-category.", true); return; }
+    var inp = document.createElement("input"); inp.type = "file"; inp.webkitdirectory = true; inp.multiple = true; inp.accept = ".json,application/json";
+    inp.onchange = function () {
+      var files = Array.prototype.slice.call(inp.files || []).filter(function (f) { return /\.json$/i.test(f.name); });
+      if (!files.length) { msg("No .json files found in that folder.", true); return; }
+      var lang = (window.prompt("Language for these papers (en or hi):", "en") || "en").trim().toLowerCase(); if (lang !== "hi") lang = "en";
+      var added = 0, qTotal = 0, skipped = 0, i = 0;
+      (function next() {
+        if (i >= files.length) { merge(); renderBody(); msg("Added " + added + " paper(s), " + qTotal + " questions total" + (skipped ? (", skipped " + skipped + " non-question JSON") : "") + "."); return; }
+        var f = files[i++];
+        var r = new FileReader();
+        r.onload = function () {
+          var text = String(r.result || ""), info = analyse(text);
+          if (info) { addPaperFile(spec, f.name, text, f.name.replace(/\.json$/i, ""), lang); added++; qTotal += info.count; }
+          else skipped++;
+          next();
+        };
+        r.onerror = function () { skipped++; next(); };
+        r.readAsText(f);
+      })();
+    };
+    inp.click();
+  }
+  function exportSite() {
+    var cfg = collect();
+    var json = JSON.stringify({ specs: cfg.specs, papers: cfg.papers });
+    var LT = "<", GT = ">";
+    var cOpen = LT + "!--", cClose = "--" + GT;
+    var sOpen = LT + "script" + GT, sClose = LT + "/script" + GT;
+    var A = cOpen + "SSC_ADMIN_DATA" + cClose, B = cOpen + "/SSC_ADMIN_DATA" + cClose;
+    var src = LT + "!doctype html" + GT + "\n" + document.documentElement.outerHTML;
+    var i = src.indexOf(A);
+    while (i > -1) { var j = src.indexOf(B, i); if (j < 0) break; src = src.slice(0, i) + src.slice(j + B.length); i = src.indexOf(A); }
+    var inject = A + sOpen + "window.__SSC_ADMIN__=" + json + ";" + sClose + B;
+    src = src.replace(LT + "/body" + GT, inject + LT + "/body" + GT);
+    try {
+      var blob = new Blob([src], { type: "text/html" });
+      var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "ssc_mts_test_paper_premium.html";
+      document.body.appendChild(a); a.click();
+      setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+      msg("Exported " + cfg.papers.length + " uploaded paper(s). Upload this file to your host to publish them.");
+    } catch (e) { msg("Export failed: " + (e.message || e), true); }
+  }
+
+  function checkHash() { if (location.hash === "#admin") openAdmin(); }
+  function init() { ready(function () { merge(); installBrowserHooks(); }); window.addEventListener("hashchange", checkHash); if (location.hash === "#admin") checkHash(); }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
+})();
+
+</script>
 </body></html>
 
 <style id="theme-aware-select-and-profile-settings">
