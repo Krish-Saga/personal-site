@@ -2,15 +2,12 @@
 ;
 const localStorage = (()=>{try{const s=window.localStorage;const k='__ssc_storage_probe__';s.setItem(k,'1');s.removeItem(k);return s;}catch(e){const m=new Map();return {getItem:k=>m.has(k)?m.get(k):null,setItem:(k,v)=>m.set(k,String(v)),removeItem:k=>m.delete(k),clear:()=>m.clear()};}})();
 const $=id=>document.getElementById(id);
-const MOCK_TEST_LOCAL_INDEX=[{"id":"193","title":"MOCK TEST - 1 (SSC MTS 2026)","questions":50,"minutes":45,"marks":150,"enFile":"193_questions0.7155126154514565.json","hiFile":"194_questions0.4303271967127016.json"},{"id":"195","title":"MOCK TEST - 2 (SSC MTS 2026)","questions":50,"minutes":45,"marks":150,"enFile":"195_questions0.3623482974787755.json","hiFile":"196_questions0.15495679982718102.json"},{"id":"197","title":"MOCK TEST - 3 (SSC MTS 2026)","questions":50,"minutes":45,"marks":150,"enFile":"197_questions0.40284421342741406.json","hiFile":"198_questions0.31093325582355413.json"},{"id":"199","title":"MOCK TEST - 4 (SSC MTS 2026)","questions":50,"minutes":45,"marks":150,"enFile":"199_questions0.09155957734173581.json","hiFile":"200_questions0.007698264801012544.json"},{"id":"201","title":"MOCK TEST - 5 (SSC MTS 2026)","questions":50,"minutes":45,"marks":150,"enFile":"201_questions0.6462643140759192.json","hiFile":"202_questions0.49309988681655237.json"},{"id":"203","title":"MOCK TEST - 6 (SSC MTS 2026)","questions":50,"minutes":45,"marks":150,"enFile":"203_questions0.07194176269952124.json","hiFile":"204_questions0.2062395182119796.json"},{"id":"205","title":"MOCK TEST - 7 (SSC MTS 2026)","questions":50,"minutes":45,"marks":150,"enFile":"205_questions0.06374161717551685.json","hiFile":"206_questions0.36792326055853886.json"},{"id":"207","title":"MOCK TEST - 8 (SSC MTS 2026)","questions":50,"minutes":45,"marks":150,"enFile":"207_questions0.5196851296213834.json","hiFile":"208_questions0.35922216261830775.json"},{"id":"209","title":"MOCK TEST - 9 (SSC MTS 2026)","questions":50,"minutes":45,"marks":150,"enFile":"209_questions0.8362884295668311.json","hiFile":"210_questions0.6250000174031345.json"},{"id":"211","title":"MOCK TEST - 10 (SSC MTS 2026)","questions":50,"minutes":45,"marks":150,"enFile":"211_questions0.07529227197535726.json","hiFile":"212_questions0.10370625514652099.json"},{"id":"213","title":"MOCK TEST - 11 (SSC MTS 2026)","questions":50,"minutes":45,"marks":150,"enFile":"213_questions0.025407635748219692.json","hiFile":"214_questions0.0657990929497807.json"},{"id":"215","title":"MOCK TEST - 12 (SSC MTS 2026)","questions":50,"minutes":45,"marks":150,"enFile":"215_questions0.47016548181194273.json","hiFile":"216_questions0.0723794146290907.json"},{"id":"217","title":"MOCK TEST - 13 (SSC MTS 2026)","questions":50,"minutes":45,"marks":150,"enFile":"217_questions0.3011159780740451.json","hiFile":"218_questions0.26285096757970106.json"},{"id":"219","title":"MOCK TEST - 14 (SSC MTS 2026)","questions":50,"minutes":45,"marks":150,"enFile":"219_questions0.14032564310832818.json","hiFile":"220_questions0.11424637546081795.json"},{"id":"221","title":"MOCK TEST - 15 (SSC MTS 2026)","questions":50,"minutes":45,"marks":150,"enFile":"221_questions0.247934681928893.json","hiFile":"222_questions0.8810309412150831.json"},{"id":"223","title":"MOCK TEST - 16 (SSC MTS 2026)","questions":50,"minutes":45,"marks":150,"enFile":"223_questions0.3289746091394349.json","hiFile":"224_questions0.2661114700154159.json"},{"id":"225","title":"MOCK TEST - 17 (SSC MTS 2026)","questions":50,"minutes":45,"marks":150,"enFile":"225_questions0.8884575293805566.json","hiFile":"226_questions0.6130749400068229.json"},{"id":"227","title":"MOCK TEST - 18 (SSC MTS 2026)","questions":50,"minutes":45,"marks":150,"enFile":"227_questions0.21870815997103277.json","hiFile":"228_questions0.24022469659630252.json"},{"id":"229","title":"MOCK TEST - 19 (SSC MTS 2026)","questions":50,"minutes":45,"marks":150,"enFile":"229_questions0.31941693490057865.json","hiFile":"230_questions0.6562443967845227.json"},{"id":"231","title":"MOCK TEST - 20 (SSC MTS 2026)","questions":50,"minutes":45,"marks":150,"enFile":"231_questions0.4488794476852328.json","hiFile":"232_questions0.959381422295656.json"},{"id":"233","title":"MOCK TEST - 21 (SSC MTS 2026)","questions":50,"minutes":45,"marks":150,"enFile":"233_questions0.09727563090935509.json","hiFile":"234_questions0.9634651758399573.json"},{"id":"235","title":"MOCK TEST - 22 (SSC MTS 2026)","questions":50,"minutes":45,"marks":150,"enFile":"235_questions0.9352779898159584.json","hiFile":"236_questions0.3274921431228106.json"},{"id":"237","title":"MOCK TEST - 23 (SSC MTS 2026)","questions":50,"minutes":45,"marks":150,"enFile":"237_questions0.6228556038791037.json","hiFile":"238_questions0.4486841292724141.json"},{"id":"239","title":"MOCK TEST - 24 (SSC MTS 2026)","questions":50,"minutes":45,"marks":150,"enFile":"239_questions0.6229563823852828.json","hiFile":"240_questions0.021625559303810715.json"},{"id":"241","title":"MOCK TEST - 25 (SSC MTS 2026)","questions":50,"minutes":45,"marks":150,"enFile":"241_questions0.37187269313375804.json","hiFile":"242_questions0.6539358791407597.json"},{"id":"1582","title":"MOCK TEST - 26 (SSC MTS 2026)","questions":50,"minutes":45,"marks":150,"enFile":"1582_questions0.22229340775924.json","hiFile":"1583_questions0.7725496349432275.json"},{"id":"1584","title":"MOCK TEST - 27 (SSC MTS 2026)","questions":50,"minutes":45,"marks":150,"enFile":"1584_questions0.6733865744429635.json","hiFile":"1585_questions0.4150192897075766.json"},{"id":"1586","title":"MOCK TEST - 28 (SSC MTS 2026)","questions":50,"minutes":45,"marks":150,"enFile":"1586_questions0.49196351022890883.json","hiFile":"1587_questions0.6182898555902854.json"},{"id":"1588","title":"MOCK TEST - 29 (SSC MTS 2026)","questions":50,"minutes":45,"marks":150,"enFile":"1588_questions0.8578431345445234.json","hiFile":"1589_questions0.28534584416177267.json"},{"id":"1590","title":"MOCK TEST - 30 (SSC MTS 2026)","questions":50,"minutes":45,"marks":150,"enFile":"1590_questions0.7767904791268934.json","hiFile":"1591_questions0.8645909692073852.json"},{"id":"1592","title":"MOCK TEST - 31 (SSC MTS 2026)","questions":50,"minutes":45,"marks":150,"enFile":"1592_questions0.2255860409392687.json","hiFile":"1593_questions0.60109624970205.json"},{"id":"1594","title":"MOCK TEST - 32 (SSC MTS 2026)","questions":50,"minutes":45,"marks":150,"enFile":"1594_questions0.2961702537522768.json","hiFile":"1595_questions0.4045418866883923.json"},{"id":"1596","title":"MOCK TEST - 33 (SSC MTS 2026)","questions":50,"minutes":45,"marks":150,"enFile":"1596_questions0.23086561863738186.json","hiFile":"1597_questions0.6948715789338453.json"},{"id":"1598","title":"MOCK TEST - 34 (SSC MTS 2026)","questions":50,"minutes":45,"marks":150,"enFile":"1598_questions0.1521370551780281.json","hiFile":"1600_questions0.048834424573453106.json"},{"id":"1599","title":"MOCK TEST - 35 (SSC MTS 2026)","questions":50,"minutes":45,"marks":150,"enFile":"1599_questions0.4008250108446354.json","hiFile":"1601_questions0.4908347930928869.json"},{"id":"1602","title":"MOCK TEST - 36 (SSC MTS 2026)","questions":50,"minutes":45,"marks":150,"enFile":"1602_questions0.02785423242730456.json","hiFile":"1603_questions0.671898572469384.json"},{"id":"1604","title":"MOCK TEST - 37 (SSC MTS 2026)","questions":50,"minutes":45,"marks":150,"enFile":"1604_questions0.7106720769298716.json","hiFile":"1605_questions0.7649494141705029.json"},{"id":"1606","title":"MOCK TEST - 38 (SSC MTS 2026)","questions":50,"minutes":45,"marks":150,"enFile":"1606_questions0.7895865166189984.json","hiFile":"1607_questions0.7657209581908286.json"},{"id":"1608","title":"MOCK TEST - 39 (SSC MTS 2026)","questions":50,"minutes":45,"marks":150,"enFile":"1608_questions0.3509133813101739.json","hiFile":"1609_questions0.7749966102567643.json"},{"id":"1610","title":"MOCK TEST - 40 (SSC MTS 2026)","questions":50,"minutes":45,"marks":150,"enFile":"1610_questions0.7859162502475986.json","hiFile":"1611_questions0.6279150269873259.json"}];
 let papersBySection={english:[],gk:[],reading:[],chapterwise:[],mock:[]},currentSection="english",active=null,answers=[],current=0,remaining=1500,tick=null,startedAt=null;
 let papers=papersBySection[currentSection];
-let currentReadingChapter="all",readingAutoLoadPromise=null,readingFolderScanned=false,readingFolderLoadFailed=false;
 // Runtime state for the exam palette and timer. These must exist before the first question renders.
 let markedQuestions=new Set(),visitedQuestions=new Set(),timerPaused=false;
 let folderOpen=false;
-var SSC_CUSTOM={},SSC_ACTIVE_SUB=null,SSC_ACTIVE_SUB_LABEL=null;const SECTION_LABELS={chapterwise:"ENGLISH - CHAPTERWISE TEST",english:"Previous Year Sectional Tests - English",gk:"Previous Year Sectional Tests GK-GS",reading:"Reading Comprehension",mock:"Full Mock Tests"};
-const READING_LABELS={cloze:"Cloze Test",passage:"Passage",rearrangement:"Sentence Rearrangement",uncategorized:"Uncategorized"};
+var SSC_CUSTOM={},SSC_ACTIVE_SUB=null,SSC_ACTIVE_SUB_LABEL=null;const SECTION_LABELS={};  /* filled from papers.json by loadFolderLibrary */
 function openSection(which){
  const root=FOLDER_TREE.find(function(n){return n.slug===which;})||FOLDER_TREE[0];
  if(!root){show("home");return;}
@@ -65,157 +62,6 @@ function normalizeQuestion(q,i){
  let answer=pick(q,["answer","correct_answer","correctAnswer","answer_key","answerKey","correct_option","correctOption","right_answer","correct"]);
  if(answer&&typeof answer==="object")answer=pick(answer,["option","text","value","id","label"]);
  return {raw:q,text:htmlToText(pick(q,["question","question_text","questionText","title","ques","q","text"])||`Question ${i+1}`),options,answer:answer==null?null:String(answer).trim(),explanation:htmlToText(pick(q,["solution_text","explanation","solution","answer_explanation","description","solution_heading","explanation_text","answer_explanation_text"])||""),explanationHtml:safeHtml(pick(q,["solution_text","explanation","solution","answer_explanation","description","solution_heading","explanation_text","answer_explanation_text"])||"")};
-}
-function getTitle(obj,file){
- const id=String(pick(obj,["test_id","testId","id"])||((file.match(/^\d+/)||[])[0]||""));
- const titles={
- "718":"PYST 1: SSC MTS 2025 – Held on 04 Shift 3","719":"PYST 2: SSC MTS 2025 – Held on 05 Shift 1",
- "720":"PYST 3: SSC MTS 2025 – Held on 05 Shift 2","721":"PYST 4: SSC MTS 2025 – Held on 05 Shift 3",
- "722":"PYST 5: SSC MTS 2025 – Held on 06 Shift 1","723":"PYST 6: SSC MTS 2025 – Held on 06 Shift 2",
- "724":"PYST 7: SSC MTS 2025 – Held on 06 Shift 3","725":"PYST 8: SSC MTS 2025 – Held on 09 Shift 1",
- "726":"PYST 9: SSC MTS 2025 – Held on 09 Shift 2","727":"PYST 10: SSC MTS 2025 – Held on 09 Shift 3",
- "728":"PYST 11: SSC MTS 2025 – Held on 10 Shift 1","729":"PYST 12: SSC MTS 2025 – Held on 10 Shift 2",
- "730":"PYST 13: SSC MTS 2025 – Held on 10 Shift 3","731":"PYST 14: SSC MTS 2025 – Held on 11 Shift 1",
- "732":"PYST 15: SSC MTS 2025 – Held on 11 Shift 2","733":"PYST 16: SSC MTS 2025 – Held on 11 Shift 3",
- "734":"PYST 17: SSC MTS 2025 – Held on 12 Shift 1","735":"PYST 18: SSC MTS 2025 – Held on 12 Shift 2",
- "736":"PYST 19: SSC MTS 2025 – Held on 12 Shift 3","737":"PYST 20: SSC MTS 2025 – Held on 13 Shift 1",
- "738":"PYST 21: SSC MTS 2025 – Held on 13 Shift 2","739":"PYST 22: SSC MTS 2025 – Held on 13 Shift 3",
- "740":"PYST 23: SSC MTS 2025 – Held on 16 Shift 1","741":"PYST 24: SSC MTS 2025 – Held on 16 Shift 2",
- "742":"PYST 25: SSC MTS 2025 – Held on 16 Shift 3","743":"PYST 26: SSC MTS 2025 – Held on 17 Shift 1",
- "744":"PYST 27: SSC MTS 2025 – Held on 17 Shift 2","745":"PYST 28: SSC MTS 2025 – Held on 17 Shift 3",
- "746":"PYST 29: SSC MTS 2025 – Held on 18 Shift 1","747":"PYST 30: SSC MTS 2025 – Held on 18 Shift 2",
- "748":"PYST 31: SSC MTS 2025 – Held on 18 Shift 3","749":"PYST 32: SSC MTS 2025 – Held on 19 Shift 1",
- "750":"PYST 33: SSC MTS 2025 – Held on 19 Shift 2","751":"PYST 34: SSC MTS 2025 – Held on 19 Shift 3",
- "752":"PYST 35: SSC MTS 2025 – Held on 20 Shift 1","753":"PYST 36: SSC MTS 2025 – Held on 20 Shift 2",
-  "754":"PYST 1: SSC MTS 2025 – Held on 04 Shift 3",
- "755":"PYST 1: SSC MTS 2025 – Held on 04 Shift 3",
- "756":"PYST 2: SSC MTS 2025 – Held on 05 Shift 1",
- "757":"PYST 2: SSC MTS 2025 – Held on 05 Shift 1",
- "758":"PYST 3: SSC MTS 2025 – Held on 05 Shift 2",
- "759":"PYST 3: SSC MTS 2025 – Held on 05 Shift 2",
- "760":"PYST 4: SSC MTS 2025 – Held on 05 Shift 3",
- "761":"PYST 4: SSC MTS 2025 – Held on 05 Shift 3",
- "762":"PYST 5: SSC MTS 2025 – Held on 06 Shift 1",
- "763":"PYST 5: SSC MTS 2025 – Held on 06 Shift 1",
- "764":"PYST 6: SSC MTS 2025 – Held on 06 Shift 2",
- "765":"PYST 6: SSC MTS 2025 – Held on 06 Shift 2",
- "766":"PYST 7: SSC MTS 2025 – Held on 06 Shift 3",
- "767":"PYST 7: SSC MTS 2025 – Held on 06 Shift 3",
- "768":"PYST 8: SSC MTS 2025 – Held on 09 Shift 1",
- "769":"PYST 8: SSC MTS 2025 – Held on 09 Shift 1",
- "770":"PYST 9: SSC MTS 2025 – Held on 09 Shift 2",
- "771":"PYST 9: SSC MTS 2025 – Held on 09 Shift 2",
- "772":"PYST 10: SSC MTS 2025 – Held on 09 Shift 3",
- "773":"PYST 10: SSC MTS 2025 – Held on 09 Shift 3",
- "774":"PYST 11: SSC MTS 2025 – Held on 10 Shift 1",
- "775":"PYST 11: SSC MTS 2025 – Held on 10 Shift 1",
- "776":"PYST 12: SSC MTS 2025 – Held on 10 Shift 2",
- "777":"PYST 12: SSC MTS 2025 – Held on 10 Shift 2",
- "778":"PYST 13: SSC MTS 2025 – Held on 10 Shift 3",
- "779":"PYST 13: SSC MTS 2025 – Held on 10 Shift 3",
- "780":"PYST 14: SSC MTS 2025 – Held on 11 Shift 1",
- "781":"PYST 14: SSC MTS 2025 – Held on 11 Shift 1",
- "782":"PYST 15: SSC MTS 2025 – Held on 11 Shift 2",
- "783":"PYST 15: SSC MTS 2025 – Held on 11 Shift 2",
- "784":"PYST 16: SSC MTS 2025 – Held on 11 Shift 3",
- "785":"PYST 16: SSC MTS 2025 – Held on 11 Shift 3",
- "786":"PYST 17: SSC MTS 2025 – Held on 12 Shift 1",
- "787":"PYST 17: SSC MTS 2025 – Held on 12 Shift 1",
- "788":"PYST 18: SSC MTS 2025 – Held on 12 Shift 2",
- "789":"PYST 18: SSC MTS 2025 – Held on 12 Shift 2",
- "790":"PYST 19: SSC MTS 2025 – Held on 12 Shift 3",
- "791":"PYST 19: SSC MTS 2025 – Held on 12 Shift 3",
- "792":"PYST 20: SSC MTS 2025 – Held on 13 Shift 1",
- "793":"PYST 20: SSC MTS 2025 – Held on 13 Shift 1",
- "814":"PYST 21: SSC MTS 2025 – Held on 13 Shift 2",
- "815":"PYST 21: SSC MTS 2025 – Held on 13 Shift 2",
- "816":"PYST 22: SSC MTS 2025 – Held on 13 Shift 3",
- "817":"PYST 22: SSC MTS 2025 – Held on 13 Shift 3",
- "818":"PYST 23: SSC MTS 2025 – Held on 16 Shift 1",
- "819":"PYST 23: SSC MTS 2025 – Held on 16 Shift 1",
- "820":"PYST 24: SSC MTS 2025 – Held on 16 Shift 2",
- "821":"PYST 24: SSC MTS 2025 – Held on 16 Shift 2",
- "822":"PYST 25: SSC MTS 2025 – Held on 16 Shift 3",
- "823":"PYST 25: SSC MTS 2025 – Held on 16 Shift 3",
- "824":"PYST 26: SSC MTS 2025 – Held on 17 Shift 1",
- "825":"PYST 26: SSC MTS 2025 – Held on 17 Shift 1",
- "826":"PYST 27: SSC MTS 2025 – Held on 17 Shift 2",
- "827":"PYST 27: SSC MTS 2025 – Held on 17 Shift 2",
- "828":"PYST 28: SSC MTS 2025 – Held on 17 Shift 3",
- "829":"PYST 28: SSC MTS 2025 – Held on 17 Shift 3",
- "830":"PYST 29: SSC MTS 2025 – Held on 18 Shift 1",
- "831":"PYST 29: SSC MTS 2025 – Held on 18 Shift 1",
- "832":"PYST 30: SSC MTS 2025 – Held on 18 Shift 2",
- "833":"PYST 30: SSC MTS 2025 – Held on 18 Shift 2",
- "834":"PYST 31: SSC MTS 2025 – Held on 18 Shift 3",
- "835":"PYST 31: SSC MTS 2025 – Held on 18 Shift 3",
- "836":"PYST 32: SSC MTS 2025 – Held on 19 Shift 1",
- "837":"PYST 32: SSC MTS 2025 – Held on 19 Shift 1",
- "838":"PYST 33: SSC MTS 2025 – Held on 19 Shift 2",
- "839":"PYST 33: SSC MTS 2025 – Held on 19 Shift 2",
- "840":"PYST 34: SSC MTS 2025 – Held on 19 Shift 3",
- "841":"PYST 34: SSC MTS 2025 – Held on 19 Shift 3",
- "842":"PYST 35: SSC MTS 2025 – Held on 20 Shift 1",
- "843":"PYST 35: SSC MTS 2025 – Held on 20 Shift 1",
- "844":"PYST 36: SSC MTS 2025 – Held on 20 Shift 2",
- "845":"PYST 36: SSC MTS 2025 – Held on 20 Shift 2",
- };
- const embedded=pick(obj,["title","test_title","name","testName"]);
- if(titles[id]) return titles[id];
- if(embedded) return clean(embedded);
- const numericId=Number(id);
- if(numericId>=2508&&numericId<=2532)return `Sentence Rearrangement Set ${numericId-2507}`;
- if(numericId>=2533&&numericId<=2582)return `Passage Set ${numericId-2532}`;
- if(numericId>=2583&&numericId<=2607)return `Cloze Test Set ${numericId-2582}`;
- const chapterwiseTitles={2648:"NOUN - SET 1",2649:"NOUN - SET 2",2650:"NOUN - SET 3",2651:"PRONOUN - SET 1",2652:"PRONOUN - SET 2",2653:"PRONOUN - SET 3",2654:"ADJECTIVE - SET 1",2655:"ADJECTIVE - SET 2",2656:"ADJECTIVE - SET 3",2657:"ARTICLE - SET 1",2658:"ARTICLE - SET 2",2659:"ARTICLE - SET 3",2660:"SUBJECT VERB AGREEMENT - SET 1",2661:"SUBJECT VERB AGREEMENT - SET 2",2662:"SUBJECT VERB AGREEMENT - SET 3",2663:"TENSE - SET 1",2664:"TENSE - SET 2",2665:"TENSE - SET 3",2666:"VERB - SET 1",2667:"VERB - SET 2",2668:"VERB - SET 3",2669:"ADVERB - SET 1",2670:"ADVERB - SET 2",2671:"ADVERB - SET 3",2672:"CONJUNCTION - SET 1",2673:"CONJUNCTION - SET 2",2674:"CONJUNCTION - SET 3",2675:"CONDITIONAL - SET 1",2676:"CONDITIONAL - SET 2",2677:"CONDITIONAL - SET 3",2678:"PREPOSITION - SET 1",2679:"PREPOSITION - SET 2",2680:"PREPOSITION - SET 3",2681:"NARRATION - SET 1",2682:"NARRATION - SET 2",2683:"NARRATION - SET 3",2684:"NARRATION - SET 4",2685:"VOICE - SET 1",2686:"VOICE - SET 2",2687:"VOICE - SET 3",2688:"VOICE - SET 4"};
- if(chapterwiseTitles[numericId])return chapterwiseTitles[numericId];
- const base=String(file).split(/[\\/]/).pop().replace(/\.json$/i,"");
- const fromAsset=base.match(/^(\d+)_questions/);
- if(fromAsset) return `SSC MTS 2025 — Paper ${fromAsset[1]}`;
- return clean(base.replace(/_questions.*$/i,"").replace(/_/g," "));
-}
-function detectLanguage(obj,id,fileName){
- const base=String(fileName).split(/[\\/]/).pop().toLowerCase();
- if(/(^|[_ .-])(hindi|hin)([_ .-]|$)/.test(base))return "hi";
- if(/(^|[_ .-])(english|eng)([_ .-]|$)/.test(base))return "en";
- // For this SSC MTS set, the first URL in each pair is English (even ID),
- // and the paired second URL is Hindi (odd ID). This overrides generic API
- // metadata such as language:"hi", which describes the app's default locale.
- const n=Number(id); if(n>=754&&n<=845)return n%2===0?"en":"hi";
- const raw=String(pick(obj,["language","lang","test_language","testLanguage"])||"").toLowerCase();
- if(["hi","hindi","hindi language"].includes(raw))return "hi";
- if(["en","english","english language"].includes(raw))return "en";
- return "en";
-}
-function inferReadingChapter(s){
- const t=String(s||"").toLowerCase().replace(/[_-]+/g," ");
- if(/\b(cloze|close test|cloze test)\b/.test(t))return "cloze";
- if(/\b(sentence rearrangement|rearrangement|para jumble|paragraph jumble|jumbled sentence)\b/.test(t))return "rearrangement";
- if(/\b(passage|reading comprehension|comprehension|\brc\b)\b/.test(t))return "passage";
- return "uncategorized";
-}
-function updateReadingChapterCounts(){
- const chapters=[{key:"cloze",id:"count-cloze",label:"Cloze Test"},{key:"rearrangement",id:"count-rearrangement",label:"Sentence Rearrangement"},{key:"passage",id:"count-passage",label:"Passage"},{key:"uncategorized",id:"count-uncategorized",label:"Uncategorized"}];
- for(const c of chapters){const n=papersBySection.reading.filter(p=>(p.chapter||inferReadingChapter(p.title+" "+p.fileName))===c.key).length;const el=$(c.id);if(el)el.textContent=`${n} test${n===1?"":"s"} loaded`;}
- const chosen=chapters.find(c=>c.key===currentReadingChapter);const title=$("readingSelectedTitle"),hint=$("readingSelectedHint");if(title)title.textContent=chosen?chosen.label:"All chapters";if(hint){const shown=chosen?papersBySection.reading.filter(p=>(p.chapter||inferReadingChapter(p.title+" "+p.fileName))===chosen.key).length:papersBySection.reading.length;hint.textContent=`${shown} test${shown===1?"":"s"} loaded from Reading Comprehension`;}
- document.querySelectorAll(".chapter-view").forEach(b=>b.classList.toggle("secondary",b.dataset.chapter===currentReadingChapter));
-}
-function ingestQuestionObject(obj,displayName,chapter=null,targetSection=currentSection,rerender=true){
- let qs=findArray(obj);if(!qs&&obj&&typeof obj==="object"&&pick(obj,["question","question_text","questionText","ques","q"])!==null)qs=[obj];
- if(!qs||!qs.length)throw new Error("No question array found. Expected an array or a questions/data/items field containing question objects.");
- const baseName=String(displayName).split(/[\\/]/).pop();
- const id=String(pick(obj,["test_id","testId","id"])||pick(qs[0],["test_id","testId","test_title_id"])||((baseName.match(/^\d+/)||[])[0]||""));
- const title=getTitle(obj,baseName),parsed=qs.map(normalizeQuestion),lang=detectLanguage(obj,id,displayName);
- const item={id,title,language:lang,questions:parsed,fileName:displayName,raw:obj,chapter:chapter||(targetSection==="reading"?inferReadingChapter(title+" "+displayName):null),minutes:Number(pick(obj,["time","duration","duration_minutes"])||25),marks:Number(pick(obj,["marks","total_marks"])||75)};
- const target=papersBySection[targetSection]||(papersBySection[targetSection]=[]);
- {
-  let grouped=target.find(p=>p.title===title&&(p.variants||(p.language&&p.language!==lang)));
-  if(grouped){if(!grouped.variants){grouped.variants={};if(grouped.language)grouped.variants[grouped.language]=grouped;}grouped.variants[lang]=item;grouped.section=targetSection;if(!grouped.questions||!grouped.questions.length)grouped.questions=parsed;}
-  else{const exists=target.findIndex(p=>p.fileName===displayName);if(exists>=0)target[exists]=item;else target.push(item);}
- }
- target.sort((a,b)=>(Number(a.id)||999999)-(Number(b.id)||999999));
- if(rerender&&currentSection===targetSection){papers=target;renderPapers();}
- return item;
 }
 const EXPECTED_LIBRARY_NAME="Test papers SSC";
 var LOCAL_FOLDER_SPECS=[];
@@ -653,7 +499,7 @@ function celebrate(correct,total){
  setTimeout(()=>{overlay.remove();banner.remove()},3600)
 }
 function renderTimer(){const m=Math.floor(Math.max(0,remaining)/60),s=Math.max(0,remaining)%60;$("timer").textContent=String(m).padStart(2,"0")+":"+String(s).padStart(2,"0")}
-var MOCK_SECTION_NAMES={"1":"English Language","2":"General Intelligence & Reasoning","4":"General Awareness (GK/GS)","5":"Numerical Aptitude"};function mockSections(){var qs=(active&&active.questions)||[];var out=[],cur=null;for(var i=0;i<qs.length;i++){var raw=qs[i].raw||{};var key=String((raw.section_id!==undefined&&raw.section_id!==null&&raw.section_id!=="")?raw.section_id:(raw.subject_title||raw.subject||raw.section||raw.part||"1"));if(!cur||cur.key!==key){cur={key:key,start:i,end:i};out.push(cur);}else{cur.end=i;}}out.forEach(function(s,idx){var n=MOCK_SECTION_NAMES[s.key];s.label=n||("Section "+(idx+1));s.idx=idx;s.color=(idx%2===0)?"#3b82f6":"#16a34a";});return out;}function renderQuestion(){
+function mockSections(){var qs=(active&&active.questions)||[];var out=[],cur=null;for(var i=0;i<qs.length;i++){var raw=qs[i].raw||{};var key=String((raw.section_id!==undefined&&raw.section_id!==null&&raw.section_id!=="")?raw.section_id:(raw.subject_title||raw.subject||raw.section||raw.part||"1"));if(!cur||cur.key!==key){cur={key:key,start:i,end:i,subject:String(raw.subject_title||raw.subject||"").trim()};out.push(cur);}else{cur.end=i;}}out.forEach(function(s,idx){s.label=s.subject||("Section "+(idx+1));s.idx=idx;s.color=(idx%2===0)?"#3b82f6":"#16a34a";});return out;}function renderQuestion(){
  let q=active?.questions?.[current]||{};
  // Recover from papers that were normalized with an incomplete schema.
  const raw=q.raw&&typeof q.raw==="object"?q.raw:q;
@@ -666,7 +512,7 @@ var MOCK_SECTION_NAMES={"1":"English Language","2":"General Intelligence & Reaso
  }
  visitedQuestions.add(current);
  $("qCounter").textContent=`Question ${current+1} of ${active.questions.length}`;
- const sectionBanner=$("mockSectionBanner"),sectionNav=$("mockSectionNav");if(sectionBanner&&sectionNav){const secs=mockSections();if(secs.length>1){const curSec=secs.find(s=>current>=s.start&&current<=s.end)||secs[0];sectionBanner.style.display="block";sectionNav.style.display="flex";sectionBanner.textContent="SECTION "+(curSec.idx+1)+" \u00b7 "+String(curSec.label).toUpperCase()+" \u00b7 QUESTIONS "+(curSec.start+1)+"\u2013"+(curSec.end+1);sectionBanner.style.borderLeft="4px solid "+curSec.color;const navHtml=secs.map(s=>'<button class="btn secondary'+(s===curSec?" active":"")+'" type="button" data-mock-start="'+s.start+'">Section '+(s.idx+1)+' \u00b7 '+s.label+' (Q'+(s.start+1)+'\u2013'+(s.end+1)+')</button>').join("");if(sectionNav.dataset.sig!==navHtml){sectionNav.innerHTML=navHtml;sectionNav.dataset.sig=navHtml;}}else{sectionBanner.style.display="none";sectionNav.style.display="none";}}
+ const sectionBanner=$("mockSectionBanner"),sectionNav=$("mockSectionNav");if(sectionBanner&&sectionNav){const secs=mockSections();if(secs.length>1){const curSec=secs.find(s=>current>=s.start&&current<=s.end)||secs[0];sectionBanner.style.display="block";sectionNav.style.display="flex";var _lb=String(curSec.label||"").toUpperCase();sectionBanner.textContent="SECTION "+(curSec.idx+1)+(_lb&&!/^SECTION\s+\d+$/.test(_lb)?" \u00b7 "+_lb:"")+" \u00b7 QUESTIONS "+(curSec.start+1)+"\u2013"+(curSec.end+1);sectionBanner.style.borderLeft="4px solid "+curSec.color;const navHtml=secs.map(s=>'<button class="btn secondary'+(s===curSec?" active":"")+'" type="button" data-mock-start="'+s.start+'">Section '+(s.idx+1)+(/^Section \d+$/i.test(String(s.label))?"":" \u00b7 "+s.label)+' (Q'+(s.start+1)+'\u2013'+(s.end+1)+')</button>').join("");if(sectionNav.dataset.sig!==navHtml){sectionNav.innerHTML=navHtml;sectionNav.dataset.sig=navHtml;}}else{sectionBanner.style.display="none";sectionNav.style.display="none";}}
  const visibleQuestion=htmlToText(q.text||pick(raw,["question","question_text","questionText","title","ques","q","text"]))||`Question ${current+1}`;
  $("qText").innerHTML=fmtQuestionHTML(visibleQuestion);
  $("qStatus").textContent=answers[current]===null?"Not answered":"Answered";
@@ -1033,7 +879,7 @@ function scrollPageToTop(){
   "use strict";
   var SALT = "ssc-mts::";
   var PASS_HASH = "9e760a0c034f27533496bedb0bfe6bff975a9e262ace645f46eff403bfe278d2";
-  var CORE = ["chapterwise", "english", "gk", "reading", "mock"];
+  var CORE = [];  /* sections come from papers.json now */
 
   /* ---------- compact SHA-256 (works offline, no secure-context needed) ---------- */
   function sha256(ascii) {
