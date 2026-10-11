@@ -3,13 +3,18 @@
 download_papers.py
 ------------------
 Downloads every paper JSON file listed in a classx test-series API response
-(the raw JSON you were given), saving each one inside an output folder named
-after the paper's title.
+(the raw JSON you were given), saving each one inside the folder you choose,
+named after the paper's title.
 
-The raw response contains a "test_titles" array; each entry has a
-"title" (the paper name) and a "test_questions_url" (the direct JSON link).
-This script reads that file, then downloads each link to
-"<Paper Name>.json".
+The raw response contains a "test_titles" array. Each entry can have up to
+two question links:
+    "test_questions_url"    - the first language (usually English)
+    "test_questions_url_2"  - the second language (e.g. Hindi), when present
+and a "test_languages" list telling you which language each link is.
+
+This script downloads BOTH links when they exist. The first is saved as
+"<Paper Name>.json" and the second as "<Paper Name> Hindi.json" (the extra
+word comes from the test's language list).
 
 Only the Python standard library is used - no pip installs needed.
 
@@ -20,12 +25,13 @@ Usage
     python download_papers.py -o "C:/Users/me/papers"    # save directly into this folder
 
 The files are written STRAIGHT INTO the folder you give with -o (or the
-folder you run the command from). No extra "papers" subfolder is created.
+folder you run the command from). No extra subfolder is created.
 
 After it finishes you get:
     <output folder>/
         Cloze Test Set 1.json
-        Cloze Test Set 2.json
+        MOCK TEST - 1 (SSC MTS 2026).json
+        MOCK TEST - 1 (SSC MTS 2026) Hindi.json
         ...
 """
 
@@ -75,6 +81,13 @@ def load_papers(path):
     return papers
 
 
+def language_label(langs, index):
+    """Extra word for the link at position 'index' (0 = first language)."""
+    if index < len(langs) and str(langs[index]).strip():
+        return f" {str(langs[index]).strip()}"
+    return f" {index + 1}"
+
+
 def download(url, dest, retries=3, timeout=60):
     """Download url -> dest. Returns (ok, bytes, error_message)."""
     last_err = None
@@ -110,6 +123,8 @@ def main():
         help="folder to save the JSON files into (default: the folder you run from)",
     )
     ap.add_argument("--timeout", type=int, default=60, help="per-request timeout in seconds")
+    ap.add_argument("--force", action="store_true",
+                    help="re-download even if the file already exists (default: skip existing files)")
     args = ap.parse_args()
 
     if not os.path.isfile(args.raw_file):
@@ -123,33 +138,54 @@ def main():
     used = {}
     ok_count = 0
     fail_count = 0
+    skip_count = 0
+    total_links = 0
 
     for i, p in enumerate(papers, 1):
         title = (p.get("title") or "").strip()
         test_id = str(p.get("id", "")).strip()
-        url = (p.get("test_questions_url") or "").strip()
+        langs = [str(l).strip() for l in (p.get("test_languages") or []) if str(l).strip()]
 
-        if not url:
+        # Collect every link this paper has, in language order.
+        links = []
+        u1 = (p.get("test_questions_url") or "").strip()
+        u2 = (p.get("test_questions_url_2") or "").strip()
+        if u1:
+            links.append((0, u1))
+        if u2:
+            links.append((1, u2))
+
+        if not links:
             print(f"[{i:>2}/{len(papers)}] {title or test_id}: no URL - skipped")
             continue
 
         base = safe_filename(title, test_id)
-        # Avoid overwriting if two papers share a title.
-        if base.lower() in used:
-            base = f"{base} ({test_id})"
-        used[base.lower()] = True
-        dest = os.path.join(out_dir, base + ".json")
+        for idx, url in links:
+            total_links += 1
+            suffix = "" if idx == 0 else language_label(langs, idx)
+            name = base + suffix
+            if name.lower() in used:
+                name = f"{name} ({test_id})"
+            used[name.lower()] = True
+            dest = os.path.join(out_dir, name + ".json")
 
-        print(f"[{i:>2}/{len(papers)}] {title or base}: downloading...", end=" ", flush=True)
-        ok, size, err = download(url, dest, timeout=args.timeout)
-        if ok:
-            ok_count += 1
-            print(f"OK ({size:,} bytes) -> {os.path.basename(dest)}")
-        else:
-            fail_count += 1
-            print(f"FAILED ({err})")
+            # Skip files that are already there (unless --force).
+            if not args.force and os.path.isfile(dest) and os.path.getsize(dest) > 0:
+                skip_count += 1
+                print(f"[{i:>2}/{len(papers)}] {name}: already exists - skipped")
+                continue
 
-    print(f"\nDone: {ok_count}/{len(papers)} downloaded into '{out_dir}'")
+            print(f"[{i:>2}/{len(papers)}] {name}: downloading...", end=" ", flush=True)
+            ok, size, err = download(url, dest, timeout=args.timeout)
+            if ok:
+                ok_count += 1
+                print(f"OK ({size:,} bytes)")
+            else:
+                fail_count += 1
+                print(f"FAILED ({err})")
+
+    print(f"\nDone: {ok_count} downloaded, {skip_count} skipped (already present), "
+          f"{fail_count} failed - into '{out_dir}'")
     if fail_count:
         print(f"{fail_count} file(s) failed - re-run the script to retry them.")
 
