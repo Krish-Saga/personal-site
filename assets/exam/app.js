@@ -12,23 +12,13 @@ let folderOpen=false;
 var SSC_CUSTOM={},SSC_ACTIVE_SUB=null,SSC_ACTIVE_SUB_LABEL=null;const SECTION_LABELS={chapterwise:"ENGLISH - CHAPTERWISE TEST",english:"Previous Year Sectional Tests - English",gk:"Previous Year Sectional Tests GK-GS",reading:"Reading Comprehension",mock:"Full Mock Tests"};
 const READING_LABELS={cloze:"Cloze Test",passage:"Passage",rearrangement:"Sentence Rearrangement",uncategorized:"Uncategorized"};
 function openSection(which){
- playSfx("whoosh");currentSection=which;currentReadingChapter="all";folderOpen=false;papers=papersBySection[which]||[];
- $("sectionHeading").textContent=SECTION_LABELS[which]||which;$("sectionCrumb").textContent=SECTION_LABELS[which]||which;
- const descriptions={english:"Open SSC MTS 2025 to see the English papers stored inside it.",gk:"Open SSC MTS 2025 to see the GK-GS papers stored inside it.",reading:"Open one of the four Reading Comprehension folders to see its papers.",chapterwise:"Open Uncategorized to see the chapterwise English papers stored inside it."};
- $("sectionSubheading").textContent=descriptions[which]||"Open the folder to see its papers.";
- $("gkLanguageWrap").style.display=((papersBySection[which]||[]).some(function(p){return p.variants&&p.variants.en&&p.variants.hi;}))?"flex":"none";const mockLoadStatus=$("mockJsonLoadStatus");if(mockLoadStatus)mockLoadStatus.style.display=which==="mock"&&folderScanComplete?"inline":"none";$("readingChapters").classList.toggle("hidden",which!=="reading");
- $("search").value="";show("sectionView");updateFolderNavigationUI();renderPapers();updateReadingChapterCounts();updateSectionFolderPath();updateSectionLoadStatus();scrollPageToTop();
+ const root=FOLDER_TREE.find(function(n){return n.slug===which;})||FOLDER_TREE[0];
+ if(!root){show("home");return;}
+ playSfx("whoosh");openFolderNode(root);
 }
-function goHome(){folderOpen=false;currentReadingChapter="all";show("home");updateSectionFolderPath();scrollPageToTop();}
-function openCurrentFolder(chapterKey=null){
- if(currentSection==="reading")currentReadingChapter=chapterKey||"uncategorized";
- folderOpen=true;papers=papersBySection[currentSection]||[];
- const title=currentSection==="reading"?(READING_LABELS[currentReadingChapter]||"Uncategorized"):(SSC_CUSTOM[currentSection]?"Uploaded":(currentSection==="chapterwise"||currentSection==="mock"?"Uncategorized":"SSC MTS 2025"));
- $("sectionHeading").textContent=title;$("paperFolderTitle").textContent=title;
- const paths=folderPathForCurrentSection();$("paperFolderSubtitle").textContent=paths.slice(1).join(" / ")+" · papers are listed inside this folder.";
- $("search").value="";updateFolderNavigationUI();updateSectionFolderPath();updateSectionLoadStatus();renderPapers();playSfx("select");scrollPageToTop();
-}
-function backToFolders(){folderOpen=false;if(currentSection==="reading")currentReadingChapter="all";papers=papersBySection[currentSection]||[];$("sectionHeading").textContent=SECTION_LABELS[currentSection]||currentSection;$("search").value="";updateFolderNavigationUI();updateSectionFolderPath();updateSectionLoadStatus();renderPapers();playSfx("back");scrollPageToTop();}
+function goHome(){navTrail=[];folderOpen=false;show("home");renderHome();scrollPageToTop();}
+function openCurrentFolder(){if(navTrail.length)openFolderNode(navTrail[navTrail.length-1]);}
+function backToFolders(){if(navTrail.length>1)openFolderNode(navTrail[navTrail.length-2]);else goHome();}
 
 const clean=s=>String(s??"").replace(/<[^>]*>/g,"").replace(/&nbsp;/g," ").trim();
 function findArray(obj,depth=0){
@@ -228,103 +218,84 @@ function ingestQuestionObject(obj,displayName,chapter=null,targetSection=current
  return item;
 }
 const EXPECTED_LIBRARY_NAME="Test papers SSC";
-const LOCAL_FOLDER_SPECS=[
- {section:"chapterwise",path:["ENGLISH - CHAPTERWISE TEST","Uncategorized"],chapter:null,label:"ENGLISH - CHAPTERWISE TEST / Uncategorized"},
- {section:"english",path:["Previous Year Sectional Tests - English","SSC MTS 2025"],chapter:null,label:"Previous Year Sectional Tests - English / SSC MTS 2025"},
- {section:"gk",path:["Previous Year Sectional Tests GK-GS","SSC MTS 2025"],chapter:null,label:"Previous Year Sectional Tests GK-GS / SSC MTS 2025"},
- {section:"reading",path:["Reading Comprehension","Cloze Test"],chapter:"cloze",label:"Reading Comprehension / Cloze Test"},
- {section:"reading",path:["Reading Comprehension","Passage"],chapter:"passage",label:"Reading Comprehension / Passage"},
- {section:"reading",path:["Reading Comprehension","Sentence Rearrangement"],chapter:"rearrangement",label:"Reading Comprehension / Sentence Rearrangement"},
- {section:"reading",path:["Reading Comprehension","Uncategorized"],chapter:"uncategorized",label:"Reading Comprehension / Uncategorized"},
- {section:"mock",path:["Full Mock Tests","Uncategorized"],chapter:null,label:"Full Mock Tests / Uncategorized"}
-];
+var LOCAL_FOLDER_SPECS=[];
 let folderScanComplete=false, loadingEmbeddedLibrary=false;
 let embeddedQuestionTextByPath=new Map();
 let sectionFolderResults={};
 function ingestPaperMetadata(file,spec){
  const item={id:String(file.id||""),title:String(file.title||file.id||"Question paper"),language:String(file.language||"en"),questions:[],questionCount:Number(file.questionCount)||0,fileName:file.path,embeddedKey:file.path,raw:null,chapter:spec.chapter||null,minutes:Number(file.minutes)||25,marks:Number(file.marks)||75,section:spec.section};
  const target=papersBySection[spec.section]||(papersBySection[spec.section]=[]);
- {
-  let grouped=target.find(p=>p.title===item.title&&(p.variants||(p.language&&p.language!==item.language)||spec.groupLangs));
-  if(grouped){if(!grouped.variants){grouped.variants={};if(grouped.language)grouped.variants[grouped.language]=grouped;}grouped.variants[item.language]=item;grouped.section=grouped.section||spec.section;}
-  else target.push(item);
- }
+ let grouped=target.find(p=>p.title===item.title&&(p.variants||(p.language&&p.language!==item.language)||spec.groupLangs));
+ if(grouped){if(!grouped.variants){grouped.variants={};if(grouped.language)grouped.variants[grouped.language]=grouped;}grouped.variants[item.language]=item;grouped.section=grouped.section||spec.section;}
+ else target.push(item);
  target.sort((a,b)=>(Number(a.id)||999999)-(Number(b.id)||999999));
 }
 function setRootLibraryState(title,message){const t=$("rootLibraryTitle"),m=$("rootLibraryMessage");if(t)t.textContent=title;if(m)m.textContent=message;}
-function specForCurrentFolder(){return LOCAL_FOLDER_SPECS.find(s=>s.section===currentSection&&(currentSection!=="reading"||s.chapter===currentReadingChapter));}
-function paperCountForCurrentFolder(){if(currentSection==="reading"&&folderOpen)return papersBySection.reading.filter(p=>p.chapter===currentReadingChapter).length;return (papersBySection[currentSection]||[]).length;}
-function folderPathForCurrentSection(){
- const root="Test papers SSC";  if(SSC_ACTIVE_SUB&&folderOpen)return [root,SECTION_LABELS[currentSection]||currentSection,SSC_ACTIVE_SUB];  if(SSC_CUSTOM[currentSection])return [root,SSC_CUSTOM[currentSection],...(folderOpen?["Uploaded"]:[])];
- if(currentSection==="chapterwise")return [root,"ENGLISH - CHAPTERWISE TEST",...(folderOpen?["Uncategorized"]:[])];
- if(currentSection==="english")return [root,"Previous Year Sectional Tests - English",...(folderOpen?["SSC MTS 2025"]:[])];
- if(currentSection==="gk")return [root,"Previous Year Sectional Tests GK-GS",...(folderOpen?["SSC MTS 2025"]:[])];
- if(currentSection==="mock")return [root,"Full Mock Tests",...(folderOpen?["Uncategorized"]:[])];
- const path=[root,"Reading Comprehension"];
- if(folderOpen)path.push(READING_LABELS[currentReadingChapter]||"Uncategorized");
- return path;
+function specForCurrentFolder(){return LOCAL_FOLDER_SPECS.find(s=>s.section===currentSection);}
+function paperCountForCurrentFolder(){return (papers||[]).length;}
+
+/* ============================ Path-driven folder tree ==================== */
+var FOLDER_TREE=[],FOLDER_NODE_BY_PATH={},navTrail=[];
+function treeKey(a){return a.join("\u0001");}
+function buildFolderTree(){
+ FOLDER_TREE=[];FOLDER_NODE_BY_PATH={};
+ Object.keys(papersBySection).forEach(function(slug){
+  (papersBySection[slug]||[]).forEach(function(p){
+   var parts=String(p.fileName||p.embeddedKey||"").replace(/\\/g,"/").split("/").filter(Boolean);
+   if(parts.length<2)return;
+   parts=parts.slice(0,-1);
+   var parent=FOLDER_TREE,node=null;
+   for(var i=0;i<parts.length;i++){
+    var key=treeKey(parts.slice(0,i+1));
+    node=FOLDER_NODE_BY_PATH[key];
+    if(!node){node={name:parts[i],depth:i,path:parts.slice(0,i+1),key:key,slug:slug,children:[],papers:[],count:0,totalQuestions:0};FOLDER_NODE_BY_PATH[key]=node;parent.push(node);}
+    node.count++;node.totalQuestions+=Number(p.questionCount)||0;
+    parent=node.children;
+   }
+   if(node)node.papers.push(p);
+  });
+ });
+ (function sortNodes(nodes){nodes.sort(function(a,b){return String(a.name).localeCompare(String(b.name),undefined,{numeric:true,sensitivity:"base"});});nodes.forEach(function(n){sortNodes(n.children);});})(FOLDER_TREE);
 }
-function navigateFolderBreadcrumb(level){
- const path=folderPathForCurrentSection();
- if(level<=0){goHome();return;}
- if(level===1){
-   if(folderOpen){backToFolders();return;}
-   // The category is already open; give the same gentle directory-navigation feedback.
-   updateSectionFolderPath();scrollPageToTop();return;
- }
- // Clicking the final breadcrumb behaves like opening that actual child directory.
- if(currentSection==="reading")openCurrentFolder(currentReadingChapter);
- else openCurrentFolder();
-}
+function ancestorsOf(node){var out=[],acc=[];node.path.forEach(function(seg){acc=acc.concat(seg);var n=FOLDER_NODE_BY_PATH[treeKey(acc)];if(n)out.push(n);});return out;}
+function currentFolderNode(){return navTrail.length?navTrail[navTrail.length-1]:null;}
+function folderPathForCurrentSection(){var out=["All folders"];navTrail.forEach(function(n){out.push(n.name);});return out;}
+function navigateFolderBreadcrumb(level){if(level<0){goHome();return;}if(navTrail[level])openFolderNode(navTrail[level]);}
 function updateSectionFolderPath(){
- const el=$("sectionFolderPath");if(!el)return;el.innerHTML="";
- const path=folderPathForCurrentSection();
- path.forEach((part,i)=>{
-   if(i){const sep=document.createElement("span");sep.className="folder-separator";sep.textContent="›";sep.setAttribute("aria-hidden","true");el.appendChild(sep);}
-   const seg=document.createElement("button");seg.type="button";
-   seg.className="folder-segment"+(i===path.length-1?" current":"");
-   seg.dataset.folderLevel=String(i);
-   seg.setAttribute("aria-label",`Open folder level: ${part}`);
-   if(i===path.length-1)seg.setAttribute("aria-current","location");
-   seg.textContent=(i===0?"📁 ":i===path.length-1?"📂 ":"")+part;
-   seg.addEventListener("click",()=>navigateFolderBreadcrumb(i));
-   el.appendChild(seg);
+ var el=$("sectionFolderPath");if(!el)return;el.innerHTML="";
+ var segs=[{label:"All folders",level:-1}];navTrail.forEach(function(n,i){segs.push({label:n.name,level:i});});
+ segs.forEach(function(s,i){
+  if(i){var sep=document.createElement("span");sep.className="folder-separator";sep.textContent="\u203a";sep.setAttribute("aria-hidden","true");el.appendChild(sep);}
+  var seg=document.createElement("button");seg.type="button";
+  seg.className="folder-segment"+(i===segs.length-1?" current":"");
+  seg.dataset.folderLevel=String(s.level);
+  seg.setAttribute("aria-label","Open folder: "+s.label);
+  if(i===segs.length-1)seg.setAttribute("aria-current","location");
+  seg.textContent=(i===0?"\ud83c\udfe0 ":i===segs.length-1?"\ud83d\udcc2 ":"\ud83d\udcc1 ")+s.label;
+  seg.addEventListener("click",function(){navigateFolderBreadcrumb(s.level);});
+  el.appendChild(seg);
  });
 }
 function updateFolderNavigationUI(){
- const reading=currentSection==="reading";
- $("readingChapters").classList.toggle("hidden",!reading||folderOpen);
- $("childFolderNavigator").classList.toggle("hidden",reading||folderOpen);
- $("paperListView").classList.toggle("hidden",!folderOpen);
- $("backToChildFolder").classList.toggle("hidden",!folderOpen);
- if(!reading){const spec=LOCAL_FOLDER_SPECS.find(s=>s.section===currentSection);const label=spec?.path.at(-1)||(currentSection==="chapterwise"?"Uncategorized":"SSC MTS 2025");$("childFolderName").textContent=label;$("childFolderDetails").textContent=folderPathForCurrentSection().slice(1).join(" / ")+" · open to view the JSON papers inside.";$("childFolderCount").textContent=`${papersBySection[currentSection]?.length||0} papers`;$("childFolderNavigator").setAttribute("aria-label",`Open ${label} folder`);}
- const count=paperCountForCurrentFolder();$("paperFolderCount").textContent=`${count} paper${count===1?"":"s"}`;
- if(folderOpen){const label=currentSection==="reading"?(READING_LABELS[currentReadingChapter]||"Uncategorized"):(SSC_ACTIVE_SUB||(currentSection==="chapterwise"?"Uncategorized":(SSC_CUSTOM[currentSection]?"Uploaded":"SSC MTS 2025")));$("paperFolderTitle").textContent=label;$("sectionHeading").textContent=label;$("paperFolderSubtitle").textContent=folderPathForCurrentSection().slice(1).join(" / ")+" · papers are listed inside this folder.";}
- else $("sectionHeading").textContent=SECTION_LABELS[currentSection]||currentSection;
+ var node=currentFolderNode();
+ var hasChildren=!!(node&&node.children.length);
+ var hasPapers=!!(node&&node.papers.length);
+ var fc=$("folderChildren");if(fc)fc.classList.toggle("hidden",!hasChildren);
+ var pv=$("paperListView");if(pv)pv.classList.toggle("hidden",!hasPapers);
+ var cf=$("childFolderNavigator");if(cf)cf.classList.add("hidden");
+ var rc=$("readingChapters");if(rc)rc.classList.add("hidden");
+ var btc=$("backToChildFolder");if(btc)btc.classList.toggle("hidden",!hasChildren||navTrail.length<2);
 }
-function updateSectionLoadStatus(customMessage=null,forceError=false){
- const el=$("sectionLoadStatus");if(!el)return;
- if(!folderOpen){el.classList.add("hidden");return;}
- let spec=specForCurrentFolder(), result=spec?sectionFolderResults[spec.label]:null;
- let message=customMessage||result?.error||`Loaded ${paperCountForCurrentFolder()} paper(s) from ${folderPathForCurrentSection().slice(1).join(" / ")}.`;
- el.textContent=message;el.classList.remove("hidden");el.classList.toggle("error",!!forceError||!!result?.error);el.classList.toggle("success",!forceError&&!result?.error);
-}
-function resetLocalPaperArrays(){papersBySection={english:[],gk:[],reading:[],chapterwise:[],mock:[]};papers=papersBySection[currentSection]||[];sectionFolderResults={};}
+function updateSectionLoadStatus(){var el=$("sectionLoadStatus");if(el)el.classList.add("hidden");}
+function resetLocalPaperArrays(){papersBySection={};papers=[];sectionFolderResults={};}
 function mapRelativePathToSpec(path){
  const parts=String(path||"").replace(/\\/g,"/").split("/").filter(Boolean);if(parts.length&&parts[0].toLowerCase()===EXPECTED_LIBRARY_NAME.toLowerCase())parts.shift();if(parts.length<2)return null;
  const norm=parts.map(x=>x.trim().toLowerCase()),file=parts[parts.length-1];if(!/\.json$/i.test(file))return null;
  return LOCAL_FOLDER_SPECS.find(spec=>{const sp=spec.path.map(x=>x.toLowerCase());return norm.length===sp.length+1&&sp.every((x,i)=>x===norm[i]);})||null;
 }
-// Mock-test language variants use the exact English/Hindi local filenames listed below.
-// The JSON contents are read from the embedded local-library paths; no network fetch is used.
 function variantForLanguage(p,lang){
- if(!p?.variants)return p;
+ if(!p||!p.variants)return p;
  const base=p.variants[lang];if(!base)return null;
- if(p.section==="mock"){
-  const path=base.embeddedKey||base.fileName;
-  if(!path||!manifestPaths.has(path))return {...base,language:lang,selectedLanguage:lang,parentPaperId:String(p.id),localFileMissing:true};
-  return {...base,language:lang,selectedLanguage:lang,parentPaperId:String(p.id),embeddedKey:path};
- }
  return {...base,language:lang,selectedLanguage:lang,parentPaperId:String(p.id)};
 }
 var manifestPaths=new Set();var manifestAllPaths=[];
@@ -348,35 +319,33 @@ async function loadPaperText(path){
  }
  throw lastErr||new Error("Could not load "+path);
 }
-async function probePaperPaths(){
- try{
-  var sample=(manifestAllPaths||[]).filter(function(_,i){return i%37===0;}).slice(0,6);
-  var ok=0;
-  for(var i=0;i<sample.length;i++){
-   try{var r=await fetch(encodeURI(sample[i]),{method:"HEAD",cache:"no-store"});if(r.ok)ok++;}catch(e){}
-  }
-  var reachable=sample.length?Math.round(ok/sample.length*100):0;
-  return {checked:sample.length,ok:ok,reachable:reachable};
- }catch(e){return {checked:0,ok:0,reachable:0};}
-}
+function cleanPaperTitle(t,grouped){var s=String(t||"").trim();if(grouped)s=s.replace(/[\s_\-]*(hindi|english|hin|eng)\s*$/i,"").trim();return s||"Question paper";}
 function ingestManifestPaper(p){
  const section=p.section||slugify(p.sectionLabel);
  const target=papersBySection[section]||(papersBySection[section]=[]);
- const item={id:String(p.id||""),title:String(p.title||p.id||"Question paper"),language:String(p.language||"en"),questions:[],questionCount:Number(p.questionCount)||0,fileName:p.path,embeddedKey:p.path,raw:null,chapter:p.chapter||null,minutes:Number(p.minutes)||25,marks:Number(p.marks)||75,section:section,subLabel:p.subLabel||null,sectionLabel:p.sectionLabel||null};
- let grouped=null;if(p.groupKey){grouped=target.find(function(x){return x.groupKey===p.groupKey;});}if(!grouped){grouped=target.find(function(x){return x.title===item.title&&(x.variants||(x.language&&x.language!==item.language));});}
- item.groupKey=p.groupKey||null;if(grouped){if(!grouped.variants){grouped.variants={};grouped.variants[grouped.language]=grouped;}grouped.variants[item.language]=item;}
+ const path=String(p.path||"");
+ /* Group English/Hindi versions of the SAME paper only within the SAME folder.
+    The manifest groupKey is scoped to the root section, which wrongly merged
+    identically-titled papers living in different sub-folders. */
+ const dir=path.split("/").slice(0,-1).join("/");
+ const suffix=p.groupKey?String(p.groupKey).split("::").slice(1).join("::"):String(p.title||p.id||"").trim().toLowerCase();
+ const dirKey=dir+"::"+suffix;
+ const item={id:String(p.id||""),title:cleanPaperTitle(p.title||p.id,!!p.groupKey),language:String(p.language||"en"),questions:[],questionCount:Number(p.questionCount)||0,fileName:path,embeddedKey:path,raw:null,chapter:p.chapter||null,minutes:Number(p.minutes)||25,marks:Number(p.marks)||75,section:section,subLabel:p.subLabel||null,sectionLabel:p.sectionLabel||null};
+ item.dirKey=dirKey;item.groupKey=p.groupKey||null;
+ const grouped=target.find(function(x){return x.dirKey===dirKey&&(x.variants||(x.language&&x.language!==item.language));});
+ if(grouped){if(!grouped.variants){grouped.variants={};grouped.variants[grouped.language]=grouped;}grouped.variants[item.language]=item;if(grouped.language==="hi"&&grouped.variants.en)grouped.title=grouped.variants.en.title;}
  else target.push(item);
 }
 async function loadFolderLibrary(){
  if(loadingEmbeddedLibrary)return;loadingEmbeddedLibrary=true;
- setRootLibraryState("Loading question papers\u2026","Reading papers.json and building the library. Each paper is fetched only when you open it.");
+ setRootLibraryState("Loading question papers\u2026","Reading the library index and building the folder tree.");
+ var _hf=$("homeFolders");if(_hf)_hf.innerHTML='<div class="skeleton"></div><div class="skeleton"></div>';
  try{
-  const res=await fetch("papers.json",{cache:"no-cache"});
-  if(!res.ok)throw new Error("papers.json was not found ("+res.status+"). Run scan_papers.py in this folder to generate it.");
+  const res=await fetch("papers.json",{cache:"default"});
+  if(!res.ok)throw new Error("papers.json was not found ("+res.status+").");
   const manifest=await res.json();
   const list=(manifest.papers||[]).slice().sort(function(a,b){return String(a.path).localeCompare(String(b.path),undefined,{numeric:true,sensitivity:"base"});});
-  resetLocalPaperArrays();embeddedQuestionTextByPath=new Map();manifestPaths=new Set();manifestAllPaths=[];
-  LOCAL_FOLDER_SPECS.length=0;const seen={};
+  resetLocalPaperArrays();embeddedQuestionTextByPath=new Map();manifestPaths=new Set();manifestAllPaths=[];LOCAL_FOLDER_SPECS.length=0;const seen={};
   list.forEach(function(p){
    manifestPaths.add(p.path);manifestAllPaths.push(p.path);
    const sec=p.section||slugify(p.sectionLabel);
@@ -384,37 +353,11 @@ async function loadFolderLibrary(){
    const key=sec+"||"+(p.subLabel||"");
    if(!seen[key]){seen[key]=1;LOCAL_FOLDER_SPECS.push({section:sec,path:[p.sectionLabel||sec,p.subLabel||"Uncategorized"],chapter:p.chapter||null,label:(p.sectionLabel||sec)+" / "+(p.subLabel||"Uncategorized"),sectionLabel:p.sectionLabel||sec});}
   });
-  const counts={};
-  list.forEach(function(p){ingestManifestPaper(p);const lbl=(p.sectionLabel||p.section)+" / "+(p.subLabel||"Uncategorized");counts[lbl]=(counts[lbl]||0)+1;});
-  LOCAL_FOLDER_SPECS.forEach(function(spec){sectionFolderResults[spec.label]={count:counts[spec.label]||0,error:(counts[spec.label]?null:"No JSON papers in "+spec.label+".")};});
-  ensureSectionCards();
-  function ensureSectionCards(){
-   var host=document.querySelector(".sectioncards"); if(!host) return;
-   var seenLabel={};
-   host.querySelectorAll(".sectionname").forEach(function(el){seenLabel[(el.textContent||"").trim().toLowerCase()]=1;});
-   var done={};
-   (LOCAL_FOLDER_SPECS||[]).forEach(function(sp){
-    var sec=sp.section; if(!sec||done[sec])return; done[sec]=1;
-    var label=String(sp.sectionLabel||SECTION_LABELS[sec]||sec);
-    if(seenLabel[label.trim().toLowerCase()])return;
-    if(host.querySelector('[data-cat="'+sec+'"]'))return;
-    var art=document.createElement("article"); art.className="sectioncard"; art.setAttribute("data-cat",sec); art.setAttribute("role","link"); art.tabIndex=0;
-    art.innerHTML='<div class="sectionicon purple" style="font-size:24px">\u25a4</div><div class="sectionname">'+esc(label)+'</div><button class="btn dark" type="button">Open \u2197</button>';
-    art.addEventListener("click",function(){try{openSection(sec);}catch(e){}});
-    host.appendChild(art);
-   });
-  }
-  probePaperPaths().then(function(info){
-   if(!info.checked)return;
-   if(info.reachable<100){
-    setStatus("Warning: "+info.ok+"/"+info.checked+" sampled paper files were NOT found on the server. Make sure the category folders (with the .json files) were uploaded next to index.html, then run scan_papers.py and re-upload. ("+info.reachable+"% reachable)");
-   } else {
-    setStatus("All sampled paper files are reachable on the server. Library is ready.");
-   }
-  });
+  list.forEach(function(p){ingestManifestPaper(p);});
+  buildFolderTree();
   folderScanComplete=true;
-  setRootLibraryState("Library ready",list.length+" papers indexed. Papers are fetched only as you open them, so the page stays small and fast.");
-  papers=papersBySection[currentSection]||[];renderPapers();if(typeof updateReadingChapterCounts==="function")updateReadingChapterCounts();updateFolderNavigationUI();updateSectionFolderPath();updateSectionLoadStatus();
+  setRootLibraryState("Library ready",list.length+" papers indexed across "+FOLDER_TREE.length+" sections.");
+  renderHome();if(navTrail.length)renderSectionView();
  }catch(e){folderScanComplete=false;setRootLibraryState("Could not load papers",e.message||String(e));console.error("Library load failed",e);}
  finally{loadingEmbeddedLibrary=false;}
 }
@@ -431,21 +374,74 @@ function chosenVariant(p,langPref){
 let activeProfileId=localStorage.getItem("sscActiveProfileId")||"default";
 function readAllAttemptHistory(){try{return JSON.parse(localStorage.getItem("sscAttemptHistory")||"[]")}catch(e){return []}}
 function readAttemptHistory(){return readAllAttemptHistory().filter(r=>(r.profileId||"default")===activeProfileId)}
-function openProfileNameDialog(){
- const existing=profileDisplayName();
- const backdrop=document.createElement('div');backdrop.className='profile-dialog-backdrop';
- backdrop.innerHTML=`<section class="profile-dialog profile-hub" role="dialog" aria-modal="true" aria-labelledby="profileDialogTitle"><div class="profile-dialog-head"><div class="profile-dialog-icon" aria-hidden="true">⚙</div><div><h2 id="profileDialogTitle">Your study profile</h2><div class="small muted">Personalize your practice space</div></div></div>
- <div class="profile-avatar-editor"><div class="profile-avatar-preview" id="profileAvatarPreview">S</div><div><strong id="profileHubName">Student</strong><div class="small muted">Profile photo</div><div class="profile-avatar-tools"><label class="profile-dialog-btn confirm" for="profilePhotoInput">📷 Upload photo</label><input id="profilePhotoInput" type="file" accept="image/*" hidden><button type="button" class="profile-dialog-btn cancel" id="removeProfilePhoto">Remove</button></div></div></div>
- <div class="profile-section-label">Edit profile name</div><form class="profile-dialog-form" id="profileEditForm"><div class="profile-name-row"><input id="profileDialogName" type="text" maxlength="32" autocomplete="off" aria-label="Profile name" placeholder="Enter profile name"><button type="submit" class="profile-dialog-btn confirm">Save name</button></div><div class="profile-dialog-error" aria-live="polite"></div></form>
- <div class="profile-section-label">Appearance</div><div class="profile-appearance-slot" id="profileAppearanceSlot"></div><div class="profile-section-label">Sound & motion</div><div class="profile-audio-slot" id="profileAudioSlot"></div><div class="profile-section-label">Profile & settings</div><div class="profile-settings-grid"><button type="button" class="profile-setting-action" id="switchProfileAction"><span class="setting-emoji">👥</span><span>Switch profile<small>Open another or create one</small></span></button><button type="button" class="profile-setting-action" id="profileExportAction"><span class="setting-emoji">📦</span><span>Export results<small>Download a backup</small></span></button><button type="button" class="profile-setting-action" id="profileResetAction"><span class="setting-emoji">↺</span><span>Reset attempts<small>Clear this profile’s progress</small></span></button><button type="button" class="profile-setting-action" id="profileDone"><span class="setting-emoji">✓</span><span>Done<small>Back to studying</small></span></button></div></section>`;
- document.body.appendChild(backdrop);const appearance=document.querySelector('.header-library-controls .theme-control');const originalAppearanceParent=appearance&&appearance.parentElement;const originalAppearanceNext=appearance&&appearance.nextSibling;const audioControls=document.querySelector('.header-audio-controls');const originalAudioParent=audioControls&&audioControls.parentElement;const originalAudioNext=audioControls&&audioControls.nextSibling;if(appearance)backdrop.querySelector('#profileAppearanceSlot').appendChild(appearance);if(audioControls)backdrop.querySelector('#profileAudioSlot').appendChild(audioControls);const input=backdrop.querySelector('#profileDialogName'),form=backdrop.querySelector('#profileEditForm'),error=backdrop.querySelector('.profile-dialog-error');input.value=existing;
- const photoKey='sscProfilePhoto:'+activeProfileId;const drawAvatar=()=>{const av=backdrop.querySelector('#profileAvatarPreview');const photo=localStorage.getItem(photoKey);av.innerHTML=photo?`<img alt="Profile photo" src="${photo}">`:esc((profileDisplayName().trim()[0]||'S').toUpperCase());backdrop.querySelector('#profileHubName').textContent=profileDisplayName()};drawAvatar();
- const close=()=>{if(appearance&&originalAppearanceParent){if(originalAppearanceNext&&originalAppearanceNext.parentNode===originalAppearanceParent)originalAppearanceParent.insertBefore(appearance,originalAppearanceNext);else originalAppearanceParent.appendChild(appearance)}if(audioControls&&originalAudioParent){if(originalAudioNext&&originalAudioNext.parentNode===originalAudioParent)originalAudioParent.insertBefore(audioControls,originalAudioNext);else originalAudioParent.appendChild(audioControls)}backdrop.remove()};backdrop.querySelector('#profileDone').addEventListener('click',close);backdrop.addEventListener('click',e=>{if(e.target===backdrop)close()});
- backdrop.querySelector('#switchProfileAction').addEventListener('click',()=>{close();openProfileNameDialog()});backdrop.querySelector('#profileExportAction').addEventListener('click',()=>document.getElementById('exportResultsButton').click());backdrop.querySelector('#profileResetAction').addEventListener('click',()=>document.getElementById('resetAttemptsButton').click());
- form.addEventListener('submit',e=>{e.preventDefault();const name=input.value.trim();if(!name){error.textContent='Please enter a profile name.';input.focus();return;}localStorage.setItem('sscProfileName:'+activeProfileId,name);localStorage.setItem('sscStudentName',name);let ps=[];try{ps=JSON.parse(localStorage.getItem('sscProfiles')||'[]')}catch(e){}const rec=ps.find(x=>x.id===activeProfileId);if(rec)rec.name=name;localStorage.setItem('sscProfiles',JSON.stringify(ps));paintProfile();drawAvatar();error.textContent='Profile name saved.';});
- backdrop.querySelector('#profilePhotoInput').addEventListener('change',e=>{const f=e.target.files&&e.target.files[0];if(!f)return;if(!f.type.startsWith('image/'))return;const reader=new FileReader();reader.onload=()=>{const img=new Image();img.onload=()=>{const c=document.createElement('canvas');const scale=Math.min(1,512/Math.max(img.width,img.height));c.width=Math.round(img.width*scale);c.height=Math.round(img.height*scale);c.getContext('2d').drawImage(img,0,0,c.width,c.height);const data=c.toDataURL('image/jpeg',.84);localStorage.setItem(photoKey,data);drawAvatar();paintProfile()};img.src=reader.result};reader.readAsDataURL(f)});
- backdrop.querySelector('#removeProfilePhoto').addEventListener('click',()=>{localStorage.removeItem(photoKey);drawAvatar();paintProfile()});
- const keyHandler=e=>{if(e.key==='Escape'){close();document.removeEventListener('keydown',keyHandler)}};document.addEventListener('keydown',keyHandler);backdrop.addEventListener('DOMNodeRemoved',()=>document.removeEventListener('keydown',keyHandler),{once:true});
+function openProfileNameDialog(){ openSettingsDrawer(); }
+function openSettingsDrawer(){
+ if(document.getElementById('settingsBackdrop'))return;
+ const sel=document.getElementById('themeMode');
+ const themes=sel?[].slice.call(sel.options).map(function(o){return {v:o.value,l:o.textContent};}):[];
+ const backdrop=document.createElement('div');backdrop.id='settingsBackdrop';backdrop.className='settings-backdrop';
+ backdrop.innerHTML=
+ '<aside class="settings-drawer" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">'
+ +'<header class="settings-head"><div><p class="settings-eyebrow">Your space</p><h2 id="settingsTitle">Profile &amp; settings</h2></div><button class="settings-close" id="settingsClose" type="button" aria-label="Close settings">\u2715</button></header>'
+ +'<div class="settings-body">'
+ +'<section class="settings-block"><h3>Profile</h3>'
+ +'<div class="settings-profile"><div class="settings-avatar" id="settingsAvatar">S</div><div class="settings-profile-main">'
+ +'<form id="settingsNameForm" class="settings-name-row"><input id="settingsNameInput" type="text" maxlength="32" autocomplete="off" aria-label="Profile name" placeholder="Your name"><button type="submit" class="settings-btn primary">Save</button></form>'
+ +'<div class="settings-profile-actions"><label class="settings-btn ghost" for="settingsPhotoInput">Upload photo</label><input id="settingsPhotoInput" type="file" accept="image/*" hidden><button type="button" class="settings-btn ghost" id="settingsRemovePhoto">Remove photo</button></div>'
+ +'<div class="settings-hint" id="settingsNameHint">Your name and photo stay on this device.</div></div></div>'
+ +'<div class="settings-row"><div><strong>Study profile</strong><span class="settings-sub">Separate progress for different people</span></div><button type="button" class="settings-btn ghost" id="settingsSwitchProfile">Switch</button></div>'
+ +'</section>'
+ +'<section class="settings-block"><h3>Appearance</h3><div class="settings-themes" id="settingsThemes"></div></section>'
+ +'<section class="settings-block"><h3>Sound &amp; motion</h3>'
+ +'<div class="settings-row"><div><strong>Sound effects</strong><span class="settings-sub">Taps, saves and results</span></div><button type="button" class="settings-toggle" id="settingsSound">On</button></div>'
+ +'<div class="settings-row"><div><strong>Animations</strong><span class="settings-sub">Subtle motion and reveals</span></div><button type="button" class="settings-toggle" id="settingsMotion">On</button></div>'
+ +'<div class="settings-row"><div><strong>Volume</strong><span class="settings-sub">Loudness of the effects</span></div><input id="settingsVolume" type="range" min="0" max="600" step="10" value="600" aria-label="Sound volume"></div>'
+ +'</section>'
+ +'<section class="settings-block"><h3>Your data</h3>'
+ +'<div class="settings-row"><div><strong>Export results</strong><span class="settings-sub">Download a backup of your attempts</span></div><button type="button" class="settings-btn ghost" id="settingsExport">Export</button></div>'
+ +'<div class="settings-row"><div><strong>Reset attempts</strong><span class="settings-sub">Clear this profile\u2019s progress</span></div><button type="button" class="settings-btn danger" id="settingsReset">Reset</button></div>'
+ +'<p class="settings-note" id="settingsLibraryNote"></p>'
+ +'</section>'
+ +'</div></aside>';
+ document.body.appendChild(backdrop);
+ const q=function(id){return backdrop.querySelector('#'+id);};
+ const themesHost=q('settingsThemes');
+ themes.forEach(function(t){
+  const b=document.createElement('button');b.type='button';b.className='theme-swatch';b.dataset.theme=t.v;
+  b.innerHTML='<span class="theme-swatch-chip"><i class="sw-bg"></i><i class="sw-surf"></i><i class="sw-acc"></i></span><span class="theme-swatch-name">'+esc(t.l)+'</span>';
+  b.onclick=function(){const s2=document.getElementById('themeMode');if(s2){s2.value=t.v;s2.dispatchEvent(new Event('change',{bubbles:true}));}markTheme();playSfx('theme');};
+  themesHost.appendChild(b);
+ });
+ function markTheme(){const cur=document.body.dataset.theme;themesHost.querySelectorAll('.theme-swatch').forEach(function(b){b.classList.toggle('active',b.dataset.theme===cur);});}
+ function drawAvatar(){const av=q('settingsAvatar');const photo=localStorage.getItem('sscProfilePhoto:'+activeProfileId);if(photo){av.innerHTML='<img alt="" src="'+photo+'">';}else{av.textContent=(profileDisplayName().trim()[0]||'S').toUpperCase();}}
+ function syncToggles(){q('settingsSound').textContent=soundEnabled?'On':'Off';q('settingsSound').classList.toggle('on',soundEnabled);q('settingsMotion').textContent=motionEnabled?'On':'Off';q('settingsMotion').classList.toggle('on',motionEnabled);q('settingsVolume').value=Math.round(soundVolume*100);}
+ q('settingsNameInput').value=(profileDisplayName()==='Student')?'':profileDisplayName();
+ drawAvatar();markTheme();syncToggles();
+ const note=q('settingsLibraryNote');if(note)note.textContent=((typeof FOLDER_TREE!=='undefined'&&FOLDER_TREE.length)?(FOLDER_TREE.length+' series \u00b7 '+manifestAllPaths.length+' papers indexed on this device.'):'Library indexing\u2026');
+ q('settingsNameForm').addEventListener('submit',function(e){e.preventDefault();const n=q('settingsNameInput').value.trim();if(!n){q('settingsNameHint').textContent='Please enter a name.';return;}localStorage.setItem('sscProfileName:'+activeProfileId,n);localStorage.setItem('sscStudentName',n);let ps=[];try{ps=JSON.parse(localStorage.getItem('sscProfiles')||'[]')}catch(_){}const rec=ps.find(function(x){return x.id===activeProfileId});if(rec)rec.name=n;localStorage.setItem('sscProfiles',JSON.stringify(ps));paintProfile();drawAvatar();q('settingsNameHint').textContent='Saved.';playSfx('save');});
+ q('settingsPhotoInput').addEventListener('change',function(e){const f=e.target.files&&e.target.files[0];if(!f||!f.type||f.type.indexOf('image/')!==0)return;const r=new FileReader();r.onload=function(){const img=new Image();img.onload=function(){const c=document.createElement('canvas');const sc=Math.min(1,512/Math.max(img.width,img.height));c.width=Math.round(img.width*sc);c.height=Math.round(img.height*sc);c.getContext('2d').drawImage(img,0,0,c.width,c.height);try{localStorage.setItem('sscProfilePhoto:'+activeProfileId,c.toDataURL('image/jpeg',.84));}catch(_){}drawAvatar();paintProfile();};img.src=r.result;};r.readAsDataURL(f);});
+ q('settingsRemovePhoto').addEventListener('click',function(){localStorage.removeItem('sscProfilePhoto:'+activeProfileId);drawAvatar();paintProfile();});
+ q('settingsSound').addEventListener('click',function(){document.getElementById('soundToggle').click();syncToggles();});
+ q('settingsMotion').addEventListener('click',function(){document.getElementById('motionToggle').click();syncToggles();});
+ q('settingsVolume').addEventListener('input',function(){const v=document.getElementById('soundVolume');if(v){v.value=q('settingsVolume').value;v.dispatchEvent(new Event('input',{bubbles:true}));}});
+ q('settingsExport').addEventListener('click',function(){document.getElementById('exportResultsButton').click();});
+ q('settingsReset').addEventListener('click',function(){document.getElementById('resetAttemptsButton').click();});
+ q('settingsSwitchProfile').addEventListener('click',function(){openProfileSwitcher(backdrop);});
+ function onKey(e){if(e.key==='Escape')close();}
+ function close(){backdrop.remove();document.removeEventListener('keydown',onKey);}
+ document.addEventListener('keydown',onKey);
+ q('settingsClose').addEventListener('click',close);
+ backdrop.addEventListener('click',function(e){if(e.target===backdrop)close();});
+}
+function openProfileSwitcher(host){
+ let profiles=[];try{profiles=JSON.parse(localStorage.getItem('sscProfiles')||'[]')}catch(_){}
+ const list=profiles.slice();if(!list.some(function(p){return p.id===activeProfileId;}))list.unshift({id:activeProfileId,name:profileDisplayName()});
+ const panel=document.createElement('div');panel.className='settings-subpanel';
+ panel.innerHTML='<h4>Switch study profile</h4><div class="settings-profile-list"></div><form class="settings-name-row" id="newProfileForm"><input id="newProfileName" type="text" maxlength="32" placeholder="New profile name" aria-label="New profile name"><button type="submit" class="settings-btn primary">Create</button></form>';
+ const listHost=panel.querySelector('.settings-profile-list');
+ list.forEach(function(p){const b=document.createElement('button');b.type='button';b.className='settings-profile-item'+(p.id===activeProfileId?' active':'');b.innerHTML='<span class="settings-profile-dot"></span>'+esc(p.name)+(p.id===activeProfileId?'<em>current</em>':'');b.onclick=function(){setActiveProfile(p.name);host.querySelector('.settings-close').click();};listHost.appendChild(b);});
+ panel.querySelector('#newProfileForm').addEventListener('submit',function(e){e.preventDefault();const n=panel.querySelector('#newProfileName').value.trim();if(!n)return;setActiveProfile(n);host.querySelector('.settings-close').click();});
+ host.querySelector('.settings-drawer').appendChild(panel);
 }
 
 function profileDisplayName(){return localStorage.getItem("sscProfileName:"+activeProfileId)||localStorage.getItem("sscStudentName")||"Student"}
@@ -474,44 +470,152 @@ function historyMatchesPaper(record,p,section=currentSection){
 function showPaperResult(card,r){const box=card.querySelector(".paper-inline-result");box.classList.remove("hidden");box.innerHTML="";const head=document.createElement("strong");head.textContent="Saved full result";const line=document.createElement("p");line.textContent=`${new Date(r.date).toLocaleString()} · Score ${r.score===null?"N/A":r.score+" / "+r.total} · ${r.accuracy===null?"Accuracy unavailable":Number(r.accuracy).toFixed(2)+"%"} · ${r.correct} correct · ${r.incorrect} incorrect · ${r.unanswered} unanswered`;const open=document.createElement("button");open.className="btn";open.textContent=r.questionSnapshot?.length?"Open full report & explanations →":"Full review unavailable for this older attempt";open.disabled=!r.questionSnapshot?.length;open.onclick=()=>openSavedResult(r);const close=document.createElement("button");close.className="btn secondary";close.textContent="Hide result";close.onclick=()=>box.classList.add("hidden");box.append(head,line,open,close)}
 function openSavedResult(record){if(!record?.questionSnapshot?.length){setStatus("This older result has no saved question snapshot. New attempts save complete question-by-question reports.");return}try{active={title:record.title,section:record.section,fileName:record.fileName,language:record.language,chapter:record.chapter,marks:record.marks||record.total,minutes:record.minutes||25,questions:record.questionSnapshot.map((q,i)=>q&&typeof q.text==="string"&&Array.isArray(q.options)?q:(q?.raw?normalizeQuestion(q.raw,i):normalizeQuestion(q,i)))};answers=Array(active.questions.length).fill(null).map((_,i)=>Number.isInteger(record.answers?.[i])?record.answers[i]:null);markedQuestions=new Set(record.marked||[]);current=0;viewingSavedResult=true;show("exam");finishTest(false,true);}catch(e){viewingSavedResult=false;setStatus("Could not reopen the saved report: "+e.message)}}
 function togglePaperHistory(card,attempts){const box=card.querySelector(".paper-inline-result");if(!box.classList.contains("hidden")&&box.dataset.mode==="history"){box.classList.add("hidden");return}box.dataset.mode="history";box.classList.remove("hidden");box.innerHTML="<strong>Attempt history</strong>";attempts.forEach(r=>{const p=document.createElement("p");p.textContent=`${new Date(r.date).toLocaleString()} — ${r.score===null?"N/A":r.score+"/"+r.total} · ${r.correct} correct · ${r.incorrect} incorrect · ${r.unanswered} unanswered`;box.appendChild(p);if(r.questionSnapshot?.length){const b=document.createElement("button");b.className="btn secondary";b.textContent="Open full report";b.onclick=()=>openSavedResult(r);box.appendChild(b)}});const close=document.createElement("button");close.className="btn secondary";close.textContent="Hide history";close.onclick=()=>box.classList.add("hidden");box.appendChild(close)}
+/* Paper rendering moved into the navigation core above (renderPapers / renderPaperChunk / buildPaperCard). */
+/* ---------- Home + folder navigation rendering ---------- */
+var PAPER_PAGE={list:[],shown:0,size:24,attemptsByKey:{},tag:"Paper"};
+function plural(n,w){return Number(n).toLocaleString("en-IN")+" "+w+(n===1?"":"s");}
+function renderHome(){
+ var host=$("homeFolders");if(!host)return;host.innerHTML="";
+ if($("headerCount"))$("headerCount").textContent=plural(FOLDER_TREE.reduce(function(a,n){return a+n.count;},0),"paper")+" indexed";
+ if(!FOLDER_TREE.length){host.innerHTML='<div class="skeleton"></div><div class="skeleton"></div>';return;}
+ FOLDER_TREE.forEach(function(node){
+  var card=document.createElement("article");
+  card.className="folder-card";card.setAttribute("role","link");card.tabIndex=0;
+  var sub=(node.children.length?plural(node.children.length,"folder")+" \u00b7 ":"")+plural(node.count,"paper");
+  card.innerHTML='<span class="folder-card-icon">\u25a4</span>'+
+   '<div class="folder-card-body"><h3>'+esc(node.name)+'</h3><p>'+esc(sub)+' \u00b7 '+plural(node.totalQuestions,"question")+'</p></div>'+
+   '<span class="folder-card-go">Open <b>\u2197</b></span>';
+  var go=function(){playSfx("select");openFolderNode(node);};
+  card.addEventListener("click",go);
+  card.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();go();}});
+  host.appendChild(card);
+ });
+}
+function openFolderNode(node){
+ navTrail=ancestorsOf(node);currentSection=node.slug;folderOpen=node.depth>0;
+ papers=node.papers.slice();show("sectionView");renderSectionView();scrollPageToTop();
+}
+function renderSectionView(){
+ var node=currentFolderNode();if(!node)return;
+ if($("sectionHeading"))$("sectionHeading").textContent=node.name;
+ if($("sectionCrumb"))$("sectionCrumb").textContent=node.name;
+ if($("sectionSubheading")){
+  var bits=[];
+  if(node.children.length)bits.push(plural(node.children.length,"folder"));
+  if(node.papers.length)bits.push(plural(node.papers.length,"paper"));
+  bits.push(plural(node.totalQuestions,"question"));
+  $("sectionSubheading").textContent=bits.join(" \u00b7 ");
+ }
+ var gw=$("gkLanguageWrap");
+ if(gw)gw.style.display=node.papers.some(function(p){return p.variants&&p.variants.en&&p.variants.hi;})?"flex":"none";
+ renderFolderChildren(node);
+ updateSectionFolderPath();updateFolderNavigationUI();updateSectionLoadStatus();renderPapers();
+}
+function renderFolderChildren(node){
+ var host=$("folderChildren");if(!host)return;host.innerHTML="";
+ if(!node.children.length)return;
+ node.children.forEach(function(child){
+  var card=document.createElement("article");
+  card.className="folder-card folder-card-sm";card.setAttribute("role","link");card.tabIndex=0;
+  var sub=(child.children.length?plural(child.children.length,"folder")+" \u00b7 ":"")+plural(child.count,"paper");
+  card.innerHTML='<span class="folder-card-icon">\ud83d\udcc1</span>'+
+   '<div class="folder-card-body"><h3>'+esc(child.name)+'</h3><p>'+esc(sub)+'</p></div>'+
+   '<span class="folder-card-go">Open <b>\u2197</b></span>';
+  var go=function(){playSfx("select");openFolderNode(child);};
+  card.addEventListener("click",go);
+  card.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();go();}});
+  host.appendChild(card);
+ });
+}
+function currentPaperSource(){var node=currentFolderNode();return node?node.papers:(papers||[]);}
+function matchesTerm(p,term){
+ if(!term)return true;
+ var hay=(p.title+" "+p.id+" "+String(p.fileName||"").split(/[\\/]/).pop()+" "+(p.subLabel||"")+" "+(p.sectionLabel||"")+" "+Object.values(p.variants||{}).map(function(v){return v.fileName+" "+v.id;}).join(" ")).toLowerCase();
+ return hay.indexOf(term)>-1;
+}
+function sortPapers(list){
+ var mode="name";try{mode=localStorage.getItem("sscSortMode")||"name";}catch(e){}
+ var cmp;
+ if(mode==="name-desc")cmp=function(a,b){return String(b.title||"").localeCompare(String(a.title||""),undefined,{numeric:true,sensitivity:"base"});};
+ else if(mode==="new")cmp=function(a,b){return (Number(b.id)||0)-(Number(a.id)||0);};
+ else if(mode==="old")cmp=function(a,b){return (Number(a.id)||0)-(Number(b.id)||0);};
+ else cmp=function(a,b){return String(a.title||"").localeCompare(String(b.title||""),undefined,{numeric:true,sensitivity:"base"});};
+ list.sort(cmp);
+}
 function renderPapers(){
- const visibleFolderPapers=(currentSection==="reading"&&folderOpen&&currentReadingChapter!=="all")?papersBySection.reading.filter(p=>p.chapter===currentReadingChapter):papers;
- $("paperCount").textContent=visibleFolderPapers.length;$("headerCount").textContent=visibleFolderPapers.length+" paper"+(visibleFolderPapers.length===1?"":"s")+" in view";
- const term=$("search").value.toLowerCase();const filtered=visibleFolderPapers.filter(p=>(p.title+" "+p.id+" "+String(p.fileName||"").split(/[\\/]/).pop()+" "+Object.values(p.variants||{}).map(v=>v.fileName+" "+v.id).join(" ")).toLowerCase().includes(term));
- $("shown").textContent=filtered.length+" shown";$("papers").innerHTML="";
- filtered.forEach(p=>{const selLang=cardLang[p.id]||$("gkLanguage").value||"en";const selected=chosenVariant(p,selLang);const card=document.createElement("article");card.className="testcard";
- const history=readAttemptHistory();const paperKey=paperIdentity(selected,currentSection);const paperAttempts=history.filter(r=>historyMatchesPaper(r,selected,currentSection));const latest=paperAttempts[0];const attemptCount=paperAttempts.length;
- card.innerHTML=`<span class="tag">${p.section==="mock"?"FULL MOCK TEST":"LOADED PAPER"}</span><h3>${esc(p.title)}</h3><div class="meta"><span>ⓘ ${selected.questionCount||selected.questions.length||0} Questions</span><span>◷ ${selected.minutes} Minutes</span><span>${selected.marks} Marks</span></div>${(p.variants&&p.variants.en&&p.variants.hi)?('<div class="lang-switch" role="group" aria-label="Paper language"><button type="button" data-lang="en" class="'+(selLang==="en"?"active":"")+'">English</button><button type="button" data-lang="hi" class="'+(selLang==="hi"?"active":"")+'">हिंदी</button></div>'):""}<div class="paper-card-actions"><button class="btn paper-attempt" data-action="attempt">${latest?"Reattempt":"Attempt"} paper →</button></div>${latest?`<div class="paper-card-actions"><button class="btn secondary paper-results" data-action="results">Latest result</button><button class="btn secondary paper-history" data-action="history">${attemptCount} attempt${attemptCount===1?"":"s"}</button></div>`:""}<div class="paper-inline-result hidden"></div>`;
-   const launchPaper=async(variant,btn)=>{
-   const choice=variant||selected;
-   if(choice.section==="mock"){
-    btn.disabled=true;const original=btn.innerHTML;btn.textContent="Loading questions…";
-    try{
-     const localPath=choice.embeddedKey||choice.fileName;
-     const localText=await loadPaperText(localPath);
-     if(typeof localText!=="string")throw new Error(`Local JSON file was not found in the embedded folder: ${localPath||"(unknown path)"}`);
-     const raw=parseQuestionJson(localText),arr=findArray(raw);
-     if(!arr?.length)throw new Error("No question array found in the selected local JSON file.");
-     start({...choice,raw,questions:arr.map((q,i)=>normalizeQuestion(q,i)),questionCount:arr.length,embeddedKey:null,language:choice.language,selectedLanguage:choice.language});
-    }catch(e){const langName=choice.language==="hi"?"Hindi":"English";setStatus(`Could not load ${langName} questions for ${choice.title}. The local file ${choice.fileName||""} could not be read. (${e.message||e})`);playSfx("error");}
-    finally{btn.disabled=false;btn.innerHTML=original;}
-   }else start(choice);
-  };
-card.querySelectorAll(".lang-switch button").forEach(b=>b.onclick=()=>{cardLang[p.id]=b.dataset.lang;renderPapers();});
-card.querySelector('[data-action="attempt"]').onclick=e=>{
-  const btn=e.currentTarget;
+ var term=(($("search")&&$("search").value)||"").toLowerCase().trim();
+ var src=currentPaperSource();
+ var filtered=(term?src.filter(function(p){return matchesTerm(p,term);}):src).slice();
+ sortPapers(filtered);
+ var history=readAttemptHistory();               /* read once per render, never per card */
+ var byKey={};history.forEach(function(r){var k=r.paperIdentity||r.paperKey;if(k)(byKey[k]=byKey[k]||[]).push(r);});
+ PAPER_PAGE.list=filtered;PAPER_PAGE.shown=0;PAPER_PAGE.attemptsByKey=byKey;PAPER_PAGE.term=term;
+ PAPER_PAGE.tag=(currentFolderNode()&&currentFolderNode().name)||"Paper";
+ var totalQ=filtered.reduce(function(s,p){return s+(Number(p.questionCount)||0);},0);
+ if($("paperCount"))$("paperCount").textContent=filtered.length;
+ if($("headerCount"))$("headerCount").textContent=filtered.length?(plural(filtered.length,"paper")+(term?" found":" in view")):(plural(FOLDER_TREE.reduce(function(a,n){return a+n.count;},0),"paper")+" indexed");
+ if($("shown"))$("shown").textContent=filtered.length+(term?" matching":" shown");
+ if($("questionCount"))$("questionCount").textContent=totalQ||"\u2014";
+ if($("paperFolderCount"))$("paperFolderCount").textContent=plural(filtered.length,"paper");
+ var grid=$("papers");if(grid)grid.innerHTML="";
+ var old=$("loadMorePapers");if(old)old.remove();
+ renderPaperChunk();
+}
+function renderPaperChunk(){
+ var grid=$("papers");if(!grid)return;
+ var start=PAPER_PAGE.shown,end=Math.min(PAPER_PAGE.list.length,PAPER_PAGE.shown+PAPER_PAGE.size);
+ for(var i=start;i<end;i++)grid.appendChild(buildPaperCard(PAPER_PAGE.list[i]));
+ PAPER_PAGE.shown=end;
+ var old=$("loadMorePapers");if(old)old.remove();
+ if(end<PAPER_PAGE.list.length){
+  var b=document.createElement("button");b.id="loadMorePapers";b.className="btn secondary load-more";b.type="button";
+  b.textContent="Show more papers ("+(PAPER_PAGE.list.length-end)+" remaining)";
+  b.onclick=function(){renderPaperChunk();};
+  grid.parentNode.appendChild(b);
+ }
+}
+function launchPaper(variant,selected,btn){
+ var choice=variant||selected;
+ if(choice.section==="mock"){
+  btn.disabled=true;var original=btn.innerHTML;btn.textContent="Loading questions\u2026";
+  loadPaperText(choice.embeddedKey||choice.fileName).then(function(localText){
+   if(typeof localText!=="string")throw new Error("Local JSON file was not found: "+(choice.fileName||""));
+   var raw=parseQuestionJson(localText),arr=findArray(raw);
+   if(!arr||!arr.length)throw new Error("No question array found in the selected JSON file.");
+   start(Object.assign({},choice,{raw:raw,questions:arr.map(function(q,i){return normalizeQuestion(q,i);}),questionCount:arr.length,embeddedKey:null,language:choice.language,selectedLanguage:choice.language}));
+  }).catch(function(e){setStatus("Could not load "+(choice.language==="hi"?"Hindi":"English")+" questions for "+choice.title+". ("+(e.message||e)+")");playSfx("error");})
+   .then(function(){btn.disabled=false;btn.innerHTML=original;});
+ } else start(choice);
+}
+function buildPaperCard(p){
+ var selLang=(cardLang[p.id])||($("gkLanguage")&&$("gkLanguage").value)||"en";
+ var selected=p;try{selected=chosenVariant(p,selLang);}catch(e){selected=p;}
+ var card=document.createElement("article");card.className="testcard";
+ var identity=paperIdentity(selected,currentSection);
+ var attempts=PAPER_PAGE.attemptsByKey[identity]||[];
+ var latest=attempts[0],count=attempts.length;
+ var q=selected.questionCount||(selected.questions&&selected.questions.length)||0;
+ var hasBoth=!!(p.variants&&p.variants.en&&p.variants.hi);
+ card.innerHTML='<span class="tag">'+esc(PAPER_PAGE.tag)+'</span>'+
+  '<h3>'+esc(p.title)+'</h3>'+
+  '<div class="meta"><span>'+q+' Questions</span><span>'+selected.minutes+' Minutes</span><span>'+selected.marks+' Marks</span></div>'+
+  (hasBoth?('<div class="lang-switch" role="group" aria-label="Paper language"><button type="button" data-lang="en" class="'+(selLang==="en"?"active":"")+'">English</button><button type="button" data-lang="hi" class="'+(selLang==="hi"?"active":"")+'">\u0939\u093f\u0902\u0926\u0940</button></div>'):"")+
+  '<div class="paper-card-actions"><button class="btn paper-attempt" data-action="attempt">'+(latest?"Reattempt":"Attempt")+' paper \u2192</button></div>'+
+  (latest?('<div class="paper-card-actions"><button class="btn secondary paper-results" data-action="results">Latest result</button><button class="btn secondary paper-history" data-action="history">'+count+' attempt'+(count===1?"":"s")+'</button></div>'):"")+
+  '<div class="paper-inline-result hidden"></div>';
+ card.querySelectorAll(".lang-switch button").forEach(function(b){b.onclick=function(){cardLang[p.id]=b.dataset.lang;var fresh=buildPaperCard(p);card.replaceWith(fresh);};});
+ card.querySelector('[data-action="attempt"]').onclick=function(e){
+  var btn=e.currentTarget;
   try{
-   // Capture the language at click time, so an async fetch cannot start the other variant.
-   const lang=cardLang[p.id]||$("gkLanguage").value||"en";
-   const variant=p.variants? variantForLanguage(p,lang) : p;
-   if(!variant)throw new Error(`The ${lang==="hi"?"Hindi":"English"} version is not available for ${p.title}.`);
-   launchPaper({...variant,language:lang,selectedLanguage:lang,parentPaperId:String(p.id)},btn);
+   var lang=(cardLang[p.id])||($("gkLanguage")&&$("gkLanguage").value)||"en";
+   var variant=p.variants?variantForLanguage(p,lang):p;
+   if(!variant)throw new Error("The "+(lang==="hi"?"Hindi":"English")+" version is not available for "+p.title+".");
+   launchPaper(Object.assign({},variant,{language:lang,selectedLanguage:lang,parentPaperId:String(p.id)}),selected,btn);
   }catch(err){setStatus(err.message||String(err));playSfx("error");}
  };
- const resultBtn=card.querySelector('[data-action="results"]');if(resultBtn)resultBtn.onclick=()=>showPaperResult(card,latest);
- const historyBtn=card.querySelector('[data-action="history"]');if(historyBtn)historyBtn.onclick=()=>togglePaperHistory(card,paperAttempts);
- $("papers").appendChild(card);});
- $("questionCount").textContent=active?active.questions.length:"—";updateReadingChapterCounts();
+ var rb=card.querySelector('[data-action="results"]');if(rb)rb.onclick=function(){showPaperResult(card,latest);};
+ var hb=card.querySelector('[data-action="history"]');if(hb)hb.onclick=function(){togglePaperHistory(card,attempts);};
+ return card;
 }
 function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function show(section){["home","sectionView","exam","results"].forEach(s=>$(s).classList.toggle("hidden",s!==section));const brandHome=$("brandHomeButton");if(brandHome){brandHome.disabled=(section==="exam"||section==="results");brandHome.style.visibility=brandHome.disabled?"hidden":"visible";brandHome.setAttribute("aria-hidden",brandHome.disabled?"true":"false");}window.scrollTo(0,0)}
@@ -675,7 +779,9 @@ $("resultTabs").addEventListener("click",e=>{const b=e.target.closest("button[da
 $("reviewFilters").addEventListener("click",e=>{const b=e.target.closest("button[data-filter]");if(!b)return;$("reviewFilters").querySelectorAll("button").forEach(x=>x.classList.toggle("active",x===b));applyReviewFilter(b.dataset.filter)});
 $("reviewPrev").onclick=()=>selectReviewQuestion(selectedReview-1);$("reviewNext").onclick=()=>selectReviewQuestion(selectedReview+1);
 $("reviewMistakes").onclick=()=>setResultView("wrong");$("resultBack").onclick=()=>{clearInterval(tick);show("home");};
-$("search").addEventListener("input",renderPapers);$("gkLanguage").addEventListener("change",renderPapers);
+var _searchTimer=null;
+$("search").addEventListener("input",function(){clearTimeout(_searchTimer);_searchTimer=setTimeout(renderPapers,170);});
+$("gkLanguage").addEventListener("change",renderPapers);
 
 // Swipe horizontally across the question panel to move between questions on touch screens.
 let touchStartX=null,touchStartY=null;
@@ -683,7 +789,7 @@ $("exam").addEventListener("touchstart",e=>{const t=e.changedTouches[0];touchSta
 $("exam").addEventListener("touchend",e=>{if(touchStartX===null)return;const t=e.changedTouches[0],dx=t.clientX-touchStartX,dy=t.clientY-touchStartY;touchStartX=null;touchStartY=null;if(Math.abs(dx)<85||Math.abs(dx)<Math.abs(dy)*1.25||$("exam").classList.contains("hidden")||!active)return;if(dx<0&&current<active.questions.length-1){current++;renderQuestion()}else if(dx>0&&current>0){current--;renderQuestion()}},{passive:true});
 $("prev").onclick=()=>{if(current>0){current--;renderQuestion()}};$("next").onclick=()=>{if(current<active.questions.length-1){current++;playTone(740,.06,.025);renderQuestion()}else{playTone(740,.06,.025);renderPalette()}};
 $("clearAnswer").onclick=()=>{answers[current]=null;playSfx("clear");renderQuestion()};$("markReview").onclick=()=>{if(markedQuestions.has(current))markedQuestions.delete(current);else markedQuestions.add(current);persistProgress();playSfx("mark");renderPalette()};
-$("saveCurrent").onclick=()=>{const b=$("saveCurrent");const ok=persistProgress();if(ok){b.classList.add("saved");b.textContent="✓ Progress saved";b.title="Answer and review marks saved on this device";playSfx("save");renderPalette();setStatus("Progress saved on this device. You can return to this paper and continue.");setTimeout(()=>{if(b.isConnected){b.classList.remove("saved");b.textContent="▣ Save";b.title="Save your answers and review marks"}},1800)}else{b.textContent="Save failed";playSfx("clear")}};$("examSectionTabs").addEventListener("click",e=>{const b=e.target.closest("button[data-examtab]");if(!b)return;$("examSectionTabs").querySelectorAll("button").forEach(x=>x.classList.toggle("active",x===b));const mode=b.dataset.examtab;const buttons=[...$("palette").querySelectorAll(".pal")];buttons.forEach((x,i)=>{x.style.display=mode==="unanswered"&&answers[i]!==null||mode==="marked"&&!markedQuestions.has(i)?"none":""})});$("pauseTest").onclick=()=>{timerPaused=!timerPaused;playSfx("pause");$("pauseTest").textContent=timerPaused?"▶":"Ⅱ";$("pauseTest").title=timerPaused?"Resume timer":"Pause timer";if(timerPaused){clearInterval(tick)}else tick=setInterval(()=>{if(remaining>0){remaining--;renderTimer()}else finishTest(true)},1000);};$("examThemeToggle").onclick=()=>{const modes=["paper","paperwhite","parchment","space","dark","light","tokyo","mocha","latte","dracula","rose","cyber","rumik"];const idx=modes.indexOf(document.body.dataset.theme||"paper");document.body.dataset.theme=modes[(idx+1)%modes.length];const sel=$("themeMode");if(sel)sel.value=document.body.dataset.theme;localStorage.setItem("sscTheme",document.body.dataset.theme);playSfx("theme")};$("examFullscreen").onclick=()=>{playSfx("power");if(!document.fullscreenElement)document.documentElement.requestFullscreen?.();else document.exitFullscreen?.()};$("finish").onclick=()=>finishTest(false);$("finishSide").onclick=()=>finishTest(false);$("cancelFinish").onclick=()=>{$("finishModal").classList.add("hidden");playTone(520,.06,.025)};$("confirmFinish").onclick=()=>finishTest(false,true);$("backHome").onclick=()=>{clearInterval(tick);show("sectionView");renderPapers()};
+$("saveCurrent").onclick=()=>{const b=$("saveCurrent");const ok=persistProgress();if(ok){b.classList.add("saved");b.textContent="✓ Progress saved";b.title="Answer and review marks saved on this device";playSfx("save");renderPalette();setStatus("Progress saved on this device. You can return to this paper and continue.");setTimeout(()=>{if(b.isConnected){b.classList.remove("saved");b.textContent="▣ Save";b.title="Save your answers and review marks"}},1800)}else{b.textContent="Save failed";playSfx("clear")}};$("examSectionTabs").addEventListener("click",e=>{const b=e.target.closest("button[data-examtab]");if(!b)return;$("examSectionTabs").querySelectorAll("button").forEach(x=>x.classList.toggle("active",x===b));const mode=b.dataset.examtab;const buttons=[...$("palette").querySelectorAll(".pal")];buttons.forEach((x,i)=>{x.style.display=mode==="unanswered"&&answers[i]!==null||mode==="marked"&&!markedQuestions.has(i)?"none":""})});$("pauseTest").onclick=()=>{timerPaused=!timerPaused;playSfx("pause");$("pauseTest").textContent=timerPaused?"▶":"Ⅱ";$("pauseTest").title=timerPaused?"Resume timer":"Pause timer";if(timerPaused){clearInterval(tick)}else tick=setInterval(()=>{if(remaining>0){remaining--;renderTimer()}else finishTest(true)},1000);};$("examThemeToggle").onclick=()=>{const modes=["light","dark","paper","slate"];const idx=modes.indexOf(document.body.dataset.theme||"paper");document.body.dataset.theme=modes[(idx+1)%modes.length];const sel=$("themeMode");if(sel)sel.value=document.body.dataset.theme;localStorage.setItem("sscTheme",document.body.dataset.theme);playSfx("theme")};$("examFullscreen").onclick=()=>{playSfx("power");if(!document.fullscreenElement)document.documentElement.requestFullscreen?.();else document.exitFullscreen?.()};$("finish").onclick=()=>finishTest(false);$("finishSide").onclick=()=>finishTest(false);$("cancelFinish").onclick=()=>{$("finishModal").classList.add("hidden");playTone(520,.06,.025)};$("confirmFinish").onclick=()=>finishTest(false,true);$("backHome").onclick=()=>{clearInterval(tick);show("sectionView");renderPapers()};
 $("retry").onclick=()=>start(active);$("nextPaper").onclick=()=>{show("home");renderPapers()};
 
 // Personal profile and local sound preferences.
@@ -746,9 +852,8 @@ if(brandStar){brandStar.title='A tiny secret might be hiding here…';brandStar.
   }
 })}
 
-const examBackButton=$('examBack');if(examBackButton)examBackButton.addEventListener('click',()=>{clearInterval(tick);show('sectionView');renderPapers()});
-$('childFolderNavigator').addEventListener('click',()=>openCurrentFolder());
-// Make the visible folder cards behave like directory entries, not just their small action buttons.
+const examBackButton=$('examBack');if(examBackButton)examBackButton.addEventListener('click',()=>{clearInterval(tick);show('sectionView');renderSectionView()});
+const _childNav=$('childFolderNavigator');if(_childNav)_childNav.addEventListener('click',()=>openCurrentFolder());
 document.querySelectorAll('.sectioncard').forEach(card=>{
  const opener=card.querySelector('button[onclick*="openSection"]');
  const key=opener?.getAttribute('onclick')?.match(/openSection\('([^']+)'\)/)?.[1];
@@ -764,12 +869,11 @@ document.querySelectorAll('.reading-chapter-card').forEach(card=>{
  card.addEventListener('click',e=>{if(e.target.closest('button,a,input,select,label'))return;activate();});
  card.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target===card){e.preventDefault();activate();}});
 });
-$('backToChildFolder').addEventListener('click',backToFolders);
-$('allReadingChapters').addEventListener('click',backToFolders);
+const _btc=$('backToChildFolder');if(_btc)_btc.addEventListener('click',backToFolders);
+const _arc=$('allReadingChapters');if(_arc)_arc.addEventListener('click',backToFolders);
 document.querySelectorAll('.chapter-view').forEach(b=>b.addEventListener('click',()=>openCurrentFolder(b.dataset.chapter)));
 paintProfile();askName();
 updateSectionFolderPath();updateFolderNavigationUI();
-renderPapers();
 loadFolderLibrary();
 
 
@@ -845,7 +949,7 @@ function scrollPageToTop(){
     var ys=list.map(function(r){return pt+ih-(pctOf(r)/100)*ih;});
     var dLine="";xs.forEach(function(x,i){dLine+=(i?" L":"M")+x.toFixed(1)+" "+ys[i].toFixed(1);});
     if(n>1){
-      var dArea="M"+xs[0].toFixed(1)+" "+(pt+ih)+dLine.slice(1)+" L"+xs[n-1].toFixed(1)+" "+(pt+ih)+" Z";
+      var dArea="M"+xs[0].toFixed(1)+" "+(pt+ih)+" "+dLine.slice(1)+" L"+xs[n-1].toFixed(1)+" "+(pt+ih)+" Z";
       svg.appendChild(mk("path","area",{d:dArea}));
       var p=mk("path","line",{d:dLine});svg.appendChild(p);
       try{var L=p.getTotalLength();p.style.strokeDasharray=L;p.style.strokeDashoffset=L;
@@ -1082,7 +1186,7 @@ function scrollPageToTop(){
     }
     return box;
   }
-  function renderSubcats(which) {
+  function renderSubcats(which) { return; /* disabled: the path-driven nav owns folder browsing */
     try { SSC_ACTIVE_SUB = null; SSC_ACTIVE_SUB_LABEL = null; } catch (e) {}
     var specs = sortSpecs(LOCAL_FOLDER_SPECS.filter(function (s) { return s.section === which; }));
     var box = ensureSubBox();
@@ -1556,114 +1660,105 @@ function scrollPageToTop(){
 
 ;
 
-/* Self-growth study dashboard — additive. Reads the app's own attempt history
-   (readAttemptHistory / localStorage) and renders streak, stats, level and badges
-   on the home screen. No existing logic is modified. */
+/* Study hub — progress dashboard, series progress, focus areas, resume.
+   Data-driven from the app's own attempt history. No new storage. */
 (function () {
   "use strict";
   function $(id) { return document.getElementById(id); }
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]; }); }
-  function hist() {
-    try { return (typeof window.readAttemptHistory === "function") ? window.readAttemptHistory() : JSON.parse(localStorage.getItem("sscAttemptHistory") || "[]"); } catch (e) { return []; }
-  }
-  function pct(r) {
-    var t = Number(r.total) || 0, s = Number(r.score); if (!isFinite(s)) s = 0;
-    if (t > 0) return Math.max(0, Math.min(100, (s / t) * 100));
-    var a = Number(r.accuracy); return isFinite(a) ? Math.max(0, Math.min(100, a)) : 0;
-  }
+  function hist() { try { return (typeof window.readAttemptHistory === "function") ? window.readAttemptHistory() : JSON.parse(localStorage.getItem("sscAttemptHistory") || "[]"); } catch (e) { return []; } }
+  function pct(r) { var t = Number(r.total) || 0, s = Number(r.score); if (!isFinite(s)) s = 0; if (t > 0) return Math.max(0, Math.min(100, (s / t) * 100)); var a = Number(r.accuracy); return isFinite(a) ? Math.max(0, Math.min(100, a)) : 0; }
   function dayKey(d) { return d.toISOString().slice(0, 10); }
-  function streak(h) {
-    var set = {};
-    h.forEach(function (r) { try { set[dayKey(new Date(r.date))] = 1; } catch (e) {} });
-    var n = 0, d = new Date();
-    if (!set[dayKey(d)]) d.setDate(d.getDate() - 1);
-    while (set[dayKey(d)]) { n++; d.setDate(d.getDate() - 1); }
-    return n;
-  }
-  var QUOTES = [
-    "Small steps every day beat big leaps once in a while.",
-    "You don't have to be great to start — you have to start to be great.",
-    "Discipline is choosing what you want most over what you want now.",
-    "Progress, not perfection.",
-    "The expert in anything was once a beginner.",
-    "Consistency is the quiet engine of mastery.",
-    "Every attempt sharpens you. Keep going.",
-    "Your only competition is who you were yesterday."
-  ];
-  function stats() {
-    var h = hist();
-    var attempts = h.length, att = 0, corr = 0, best = 0, accSum = 0, accCnt = 0;
+  function todayKey() { return dayKey(new Date()); }
+  function streak(h) { var set = {}; h.forEach(function (r) { try { set[dayKey(new Date(r.date))] = 1; } catch (e) {} }); var n = 0, d = new Date(); if (!set[dayKey(d)]) d.setDate(d.getDate() - 1); while (set[dayKey(d)]) { n++; d.setDate(d.getDate() - 1); } return n; }
+  var GOAL = 30;
+  function fmtDate(iso) { try { return new Date(iso).toLocaleDateString("en-IN", { day: "2-digit", month: "short" }); } catch (e) { return ""; } }
+  function stats(h) {
+    var att = 0, corr = 0, best = 0, accSum = 0, accCnt = 0, today = 0;
     h.forEach(function (r) {
-      att += Number(r.attempted) || 0;
-      corr += Number(r.correct) || 0;
+      att += Number(r.attempted) || 0; corr += Number(r.correct) || 0;
       var p = pct(r); if (p > best) best = p;
       var a = Number(r.accuracy); if (isFinite(a)) { accSum += a; accCnt++; }
+      try { if (dayKey(new Date(r.date)) === todayKey()) today += Number(r.attempted) || 0; } catch (e) {}
     });
-    var acc = att ? Math.round((corr / att) * 100) : (accCnt ? Math.round(accSum / accCnt) : 0);
-    var xp = corr, level = Math.floor(xp / 100) + 1, into = xp % 100;
-    return { attempts: attempts, att: att, corr: corr, best: Math.round(best), acc: acc, xp: xp, level: level, into: into, streak: streak(h) };
+    var acc = att ? Math.round(corr / att * 100) : (accCnt ? Math.round(accSum / accCnt) : 0);
+    var xp = corr;
+    return { attempts: h.length, att: att, corr: corr, best: Math.round(best), acc: acc, xp: xp, lvl: Math.floor(xp / 100) + 1, into: xp % 100, today: today, streak: streak(h) };
   }
-  function weekly(h) {
-    var days = [], today = new Date(), LBL = ["S", "M", "T", "W", "T", "F", "S"];
-    for (var i = 6; i >= 0; i--) { var d = new Date(today); d.setDate(d.getDate() - i); days.push({ key: dayKey(d), label: LBL[d.getDay()], q: 0 }); }
-    var map = {}; days.forEach(function (x) { map[x.key] = x; });
-    h.forEach(function (r) { try { var k = dayKey(new Date(r.date)); if (map[k]) map[k].q += (Number(r.attempted) || 0); } catch (e) {} });
-    return days;
+  function weekly(h) { var days = [], today = new Date(), L = ["S", "M", "T", "W", "T", "F", "S"]; for (var i = 6; i >= 0; i--) { var d = new Date(today); d.setDate(d.getDate() - i); days.push({ key: dayKey(d), label: L[d.getDay()], q: 0 }); } var m = {}; days.forEach(function (x) { m[x.key] = x; }); h.forEach(function (r) { try { var k = dayKey(new Date(r.date)); if (m[k]) m[k].q += Number(r.attempted) || 0; } catch (e) {} }); return days; }
+  function seriesProgress(h) {
+    if (typeof FOLDER_TREE === "undefined" || !FOLDER_TREE.length) return [];
+    return FOLDER_TREE.map(function (node) {
+      var recs = h.filter(function (r) { return (r.section || "") === node.slug; });
+      var attempted = {}; recs.forEach(function (r) { if (r.paperIdentity) attempted[r.paperIdentity] = 1; });
+      var att = 0, corr = 0; recs.forEach(function (r) { att += Number(r.attempted) || 0; corr += Number(r.correct) || 0; });
+      return { name: node.name, total: node.count, attempted: Object.keys(attempted).length, acc: att ? Math.round(corr / att * 100) : 0, n: recs.length };
+    }).filter(function (x) { return x.total > 0; });
   }
-  function mastery(h) {
-    var by = {};
-    h.forEach(function (r) { var s = r.section || "other"; by[s] = by[s] || { a: 0, c: 0, n: 0 }; by[s].a += Number(r.attempted) || 0; by[s].c += Number(r.correct) || 0; by[s].n++; });
-    return Object.keys(by).map(function (k) { var v = by[k]; return { name: k, acc: v.a ? Math.round((v.c / v.a) * 100) : 0, n: v.n }; }).sort(function (x, y) { return y.n - x.n; }).slice(0, 5);
+  function focusAreas(h) {
+    var by = {}; h.forEach(function (r) { var f = String(r.fileName || "").split("/"); if (f.length < 2) return; var k = f[1]; var o = by[k] || (by[k] = { name: k, att: 0, corr: 0, n: 0 }); o.att += Number(r.attempted) || 0; o.corr += Number(r.correct) || 0; o.n++; });
+    return Object.keys(by).map(function (k) { var o = by[k]; o.acc = o.att ? Math.round(o.corr / o.att * 100) : 0; return o; }).filter(function (o) { return o.att >= 5; }).sort(function (a, b) { return a.acc - b.acc; }).slice(0, 3);
   }
+  function findPaperByFile(fileName) {
+    try { for (var s in papersBySection) { var arr = papersBySection[s] || []; for (var i = 0; i < arr.length; i++) { var p = arr[i]; if (p.fileName === fileName) return p; if (p.variants) { for (var l in p.variants) { if (p.variants[l].fileName === fileName) return p.variants[l]; } } } } } catch (e) {}
+    return null;
+  }
+  function openSeriesByName(name) { if (typeof FOLDER_TREE === "undefined") return; var node = FOLDER_TREE.find(function (n) { return n.name === name; }) || null; if (node && typeof openFolderNode === "function") openFolderNode(node); }
+  function openL2ByName(name) { if (typeof FOLDER_TREE === "undefined") return; var node = null; FOLDER_TREE.forEach(function (r) { (r.children || []).forEach(function (c) { if (!node && c.name === name) node = c; }); }); if (node && typeof openFolderNode === "function") openFolderNode(node); }
   function render() {
     var panel = $("studyPanel"); if (!panel) return;
-    var h = hist();
-    var s = stats();
-    var q = QUOTES[(new Date().getDate() + new Date().getMonth()) % QUOTES.length];
-    var badges = [
-      { n: "First Step", ic: "\uD83C\uDF31", on: s.attempts >= 1 },
-      { n: "Committed", ic: "\uD83D\uDCD8", on: s.attempts >= 5 },
-      { n: "Relentless", ic: "\uD83D\uDE80", on: s.attempts >= 20 },
-      { n: "On Fire", ic: "\uD83D\uDD25", on: s.streak >= 3 },
-      { n: "Sharpshooter", ic: "\uD83C\uDFAF", on: s.acc >= 80 && s.att >= 20 },
-      { n: "Century", ic: "\uD83D\uDCAF", on: s.att >= 100 },
-      { n: "Scholar", ic: "\uD83C\uDF93", on: s.att >= 500 }
-    ];
-    panel.innerHTML =
-      '<div class="study-dash">'
-      + '<div class="study-card"><span class="ic">\uD83D\uDD25</span><strong>' + s.streak + '</strong><span class="lbl">Day streak</span></div>'
-      + '<div class="study-card"><span class="ic">\u2713</span><strong>' + s.att + '</strong><span class="lbl">Questions attempted</span></div>'
-      + '<div class="study-card"><span class="ic">\u25CE</span><strong>' + s.acc + '%</strong><span class="lbl">Avg accuracy</span></div>'
-      + '<div class="study-card"><span class="ic">\u2605</span><strong>' + s.best + '%</strong><span class="lbl">Best score</span></div>'
-      + '</div>'
-      + '<div class="study-level"><div class="study-level-head"><span>Level <b>' + s.level + '</b> \u00B7 ' + s.xp + ' XP</span><span>' + s.into + '/100 to next level</span></div><div class="study-xp"><i style="width:' + s.into + '%"></i></div></div>'
-      + '<div class="study-badges">' + badges.map(function (b) { return '<span class="study-badge' + (b.on ? " on" : "") + '"><span class="dot"></span>' + b.ic + " " + esc(b.n) + '</span>'; }).join("") + '</div>'
-      + '<div class="study-quote">\u201C' + esc(q) + '\u201D</div>'
-      + '<div class="study-grid2">'
-      + (function () { var d = weekly(h), mx = Math.max.apply(null, d.map(function (x) { return x.q; })) || 1, tot = d.reduce(function (s, x) { return s + x.q; }, 0); return '<div class="study-week"><div class="study-week-head"><span>Last 7 days</span><span>' + tot + ' questions</span></div><div class="study-week-bars">' + d.map(function (x) { var p = x.q ? Math.max(10, Math.round((x.q / mx) * 100)) : 0; return '<div class="study-daybar"><i style="height:' + p + '%"></i><span>' + x.label + '</span></div>'; }).join('') + '</div></div>'; })()
-      + (function () { var ms = mastery(h); if (!ms.length) return ''; return '<div class="study-mastery"><div class="study-mastery-head"><span>Section mastery</span><span>accuracy</span></div>' + ms.map(function (m) { return '<div class="study-mastery-row"><span>' + esc(m.name) + '</span><div class="study-mastery-bar"><i style="width:' + m.acc + '%"></i></div><b>' + m.acc + '%</b></div>'; }).join('') + '</div>'; })()
+    var h = hist(), s = stats(h);
+    var goalPct = Math.min(100, Math.round(s.today / GOAL * 100));
+    var latest = h[0] || null;
+    var series = seriesProgress(h), focus = focusAreas(h), week = weekly(h);
+    var weekMax = Math.max.apply(null, week.map(function (x) { return x.q; })) || 1;
+    var out = "";
+    out += '<div class="hub-head"><div><p class="hub-eyebrow">Your progress</p><h2>Study hub</h2></div>'
+      + '<div class="hub-level"><span class="hub-level-badge">Lv ' + s.lvl + '</span><div class="hub-xp"><i style="width:' + s.into + '%"></i></div><span class="hub-xp-text">' + s.xp + ' XP</span></div></div>';
+    out += '<div class="hub-stats">'
+      + '<div class="hub-stat"><span class="hub-stat-ic">\u25f4</span><strong>' + s.attempts + '</strong><span>Papers attempted</span></div>'
+      + '<div class="hub-stat"><span class="hub-stat-ic">\u2713</span><strong>' + s.att + '</strong><span>Questions solved</span></div>'
+      + '<div class="hub-stat"><span class="hub-stat-ic">\u25ce</span><strong>' + s.acc + '%</strong><span>Average accuracy</span></div>'
+      + '<div class="hub-stat"><span class="hub-stat-ic">\u2605</span><strong>' + s.best + '%</strong><span>Best score</span></div>'
+      + '<div class="hub-stat"><span class="hub-stat-ic">\u25f4</span><strong>' + s.streak + '</strong><span>Day streak</span></div>'
       + '</div>';
-    var bar = panel.querySelector(".study-xp i"); if (bar) { bar.style.width = "0"; requestAnimationFrame(function () { requestAnimationFrame(function () { bar.style.width = s.into + "%"; }); }); }
+    out += '<div class="hub-row2">';
+    out += '<div class="hub-card hub-continue"><p class="hub-card-eyebrow">' + (latest ? "Pick up where you left off" : "Start your first paper") + '</p>';
+    if (latest) { out += '<h3>' + esc(latest.title || "Your last paper") + '</h3><p class="hub-sub">' + (latest.date ? ("Last attempted " + fmtDate(latest.date)) : "") + (latest.accuracy != null ? (" \u00b7 " + Number(latest.accuracy).toFixed(0) + "% accuracy") : "") + '</p><button class="hub-btn primary" id="hubResume" type="button">Resume paper \u2192</button>'; }
+    else { out += '<h3>Nothing attempted yet</h3><p class="hub-sub">Open a series below and attempt your first paper \u2014 your progress will appear here.</p><button class="hub-btn primary" id="hubStart" type="button">Browse series \u2192</button>'; }
+    out += '</div>';
+    out += '<div class="hub-card hub-goal"><div class="hub-ring" style="--p:' + goalPct + '"><strong>' + s.today + '</strong><span>/ ' + GOAL + '</span></div><div><p class="hub-card-eyebrow">Daily goal</p><h3>' + (goalPct >= 100 ? "Goal reached" : "Questions today") + '</h3><p class="hub-sub">' + (goalPct >= 100 ? "Great work \u2014 target hit for today." : "Aim for " + GOAL + " questions a day.") + '</p></div></div>';
+    out += '</div>';
+    if (series.length) {
+      out += '<div class="hub-card hub-series"><div class="hub-card-head"><h3>Series progress</h3><span class="hub-sub">Papers attempted</span></div>';
+      series.forEach(function (x) { var p = x.total ? Math.round(x.attempted / x.total * 100) : 0; out += '<div class="hub-series-row"><div class="hub-series-top"><button type="button" class="hub-series-name" data-open-series="' + esc(x.name) + '">' + esc(x.name) + '</button><span class="hub-sub">' + x.attempted + ' / ' + x.total + ' \u00b7 ' + x.acc + '%</span></div><div class="hub-bar"><i style="width:' + p + '%"></i></div></div>'; });
+      out += '</div>';
+    }
+    out += '<div class="hub-row2">';
+    if (focus.length) {
+      out += '<div class="hub-card"><div class="hub-card-head"><h3>Focus areas</h3><span class="hub-sub">Lowest accuracy</span></div>';
+      focus.forEach(function (f) { out += '<div class="hub-focus-row"><div><button type="button" class="hub-focus-name" data-open-l2="' + esc(f.name) + '">' + esc(f.name) + '</button><span class="hub-sub">' + f.att + ' solved</span></div><span class="hub-pill warn">' + f.acc + '%</span></div>'; });
+      out += '</div>';
+    }
+    out += '<div class="hub-card"><div class="hub-card-head"><h3>Recent attempts</h3><span class="hub-sub">Latest ' + Math.min(5, h.length) + '</span></div>';
+    if (h.length) { h.slice(0, 5).forEach(function (r) { out += '<div class="hub-recent-row"><div><strong>' + esc(String(r.title || "Paper").slice(0, 60)) + '</strong><span class="hub-sub">' + fmtDate(r.date) + (r.language ? (" \u00b7 " + String(r.language).toUpperCase()) : "") + '</span></div><span class="hub-pill ' + (pct(r) >= 60 ? "good" : "warn") + '">' + Math.round(pct(r)) + '%</span></div>'; }); }
+    else { out += '<p class="hub-sub">No attempts yet.</p>'; }
+    out += '</div></div>';
+    out += '<div class="hub-card hub-week"><div class="hub-card-head"><h3>Last 7 days</h3><span class="hub-sub">' + week.reduce(function (a, x) { return a + x.q; }, 0) + ' questions</span></div><div class="hub-week-bars">';
+    week.forEach(function (x) { var p = x.q ? Math.max(8, Math.round(x.q / weekMax * 100)) : 0; out += '<div class="hub-day"><i style="height:' + p + '%"></i><span>' + x.label + '</span></div>'; });
+    out += '</div></div>';
+    panel.innerHTML = out;
+    var res = $("hubResume"); if (res) res.onclick = function () { if (latest) { var p = findPaperByFile(latest.fileName); if (p && typeof start === "function") { start(p); return; } if (latest.questionSnapshot && typeof openSavedResult === "function") { openSavedResult(latest); } } };
+    var st = $("hubStart"); if (st) st.onclick = function () { var el = $("homeFolders"); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); };
+    panel.querySelectorAll("[data-open-series]").forEach(function (b) { b.onclick = function () { openSeriesByName(b.getAttribute("data-open-series")); }; });
+    panel.querySelectorAll("[data-open-l2]").forEach(function (b) { b.onclick = function () { openL2ByName(b.getAttribute("data-open-l2")); }; });
   }
   function inject() {
     var home = $("home"); if (!home) return;
     var panel = $("studyPanel");
-    if (!panel) {
-      panel = document.createElement("section"); panel.id = "studyPanel"; panel.className = "study-panel"; panel.setAttribute("aria-label", "Your study dashboard");
-      var hero = home.querySelector(".home-hero");
-      if (hero && hero.parentNode) hero.parentNode.insertBefore(panel, hero.nextSibling); else home.appendChild(panel);
-    }
+    if (!panel) { panel = document.createElement("section"); panel.id = "studyPanel"; panel.className = "hub-panel"; panel.setAttribute("aria-label", "Your progress"); var hero = home.querySelector(".home-hero"); if (hero && hero.parentNode) hero.parentNode.insertBefore(panel, hero.nextSibling); else home.appendChild(panel); }
     render();
   }
-  function hook() {
-    inject();
-    if (typeof window.show === "function" && !window.show.__studyHooked) {
-      var o = window.show;
-      var w = function (s) { var r = o.apply(this, arguments); if (s === "home") { setTimeout(render, 60); } return r; };
-      w.__studyHooked = true; window.show = w;
-    }
-  }
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { setTimeout(hook, 400); });
-  else setTimeout(hook, 400);
+  function hook() { inject(); if (typeof window.show === "function" && !window.show.__hubHooked) { var o = window.show; var w = function (s) { var r = o.apply(this, arguments); if (s === "home") setTimeout(render, 60); return r; }; w.__hubHooked = true; window.show = w; } }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { setTimeout(hook, 400); }); else setTimeout(hook, 400);
 })();
-

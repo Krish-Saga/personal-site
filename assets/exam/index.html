@@ -2,39 +2,49 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SSC MTS 2025 — Test Series</title>
+<title>SSC MTS Practice — Test Series</title>
 
 <link rel="stylesheet" href="styles.css">
 </head>
-<body data-theme="aurora">
+<body data-theme="light">
 <div class="page-scroll-progress" aria-hidden="true"><span id="pageScrollProgressBar"></span></div>
 <div hidden aria-hidden="true"><button id="exportResultsButton" type="button"></button><button id="resetAttemptsButton" type="button"></button></div>
 <header class="app-header">
   <div class="header-primary">
-    <div class="brandmark"><button class="brand-home" id="brandHomeButton" type="button" aria-label="Test Paper home"><span class="brandlogo">✦</span><span class="brand">Test Paper <small>SSC MTS · PERSONAL PRACTICE</small></span></button></div>
+    <button class="brandmark" id="brandHomeButton" type="button" aria-label="Go to library home">
+      <span class="brandlogo" aria-hidden="true">◆</span>
+      <span class="brand-copy"><span class="brand">Test Paper</span><span class="brand-sub">SSC MTS · Personal practice</span></span>
+    </button>
     <div class="header-primary-tools">
-      <div class="header-count-wrap"><span class="header-status-dot" aria-hidden="true"></span><div class="small" id="headerCount">Offline library</div></div>
-      <button class="profile-chip" id="profileButton" type="button" title="Switch or create a study profile"><span class="avatar" id="userAvatar">S</span><span id="userNameLabel">Student</span><span class="profile-chevron">⌄</span></button>
+      <div class="header-stat" title="Papers indexed in your library">
+        <span class="header-status-dot" aria-hidden="true"></span>
+        <span id="headerCount">Loading library…</span>
+      </div>
+      <button class="account-btn" id="profileButton" type="button" aria-haspopup="dialog" title="Profile &amp; settings">
+        <span class="avatar" id="userAvatar">S</span>
+        <span class="account-copy"><strong id="userNameLabel">Student</strong><span>Profile &amp; settings</span></span>
+        <span class="account-chevron" aria-hidden="true">⌄</span>
+      </button>
     </div>
   </div>
   <nav class="header-toolbar" aria-label="Study controls">
-    <div class="toolbar-group header-audio-controls">
-      <button class="iconbtn" id="soundToggle" type="button" aria-label="Toggle sound" title="Toggle sound">🔊 Sound on</button>
-      <label class="sound-volume" title="Sound volume" for="soundVolume"><span class="volume-label">Volume</span><button class="volume-step" id="soundVolumeDown" type="button" aria-label="Decrease sound volume" title="Decrease volume">−</button><input id="soundVolume" type="range" min="0" max="600" step="10" value="600" aria-label="Sound volume"><button class="volume-step" id="soundVolumeUp" type="button" aria-label="Increase sound volume" title="Increase volume">+</button><span id="soundVolumeValue">250%</span></label>
-      <button class="iconbtn" id="motionToggle" type="button" aria-label="Toggle animations" title="Toggle animations">✨ Motion on</button>
-    </div>
     <div class="toolbar-group header-library-controls">
-      <label class="theme-control" for="themeMode"><span>Appearance</span><select id="themeMode" aria-label="Color mode"><option value="aurora">Aurora · dark</option><option value="midnight">Midnight · dark</option><option value="sunrise">Sunrise · dark</option><option value="emerald">Emerald · dark</option><option value="paper">Warm Study Paper</option><option value="paperwhite">White Crinkled Paper · dotted</option><option value="parchment">Yellow Crinkled Paper · dotted</option><option value="space">Cosmic Space · animated</option><option value="dark">Dark</option><option value="light">Light</option><option value="tokyo">Tokyo Night</option><option value="mocha">Catppuccin Mocha</option><option value="latte">Catppuccin Latte</option><option value="dracula">Dracula</option><option value="rose">Rosé Pine</option><option value="cyber">Cyberpunk</option><option value="rumik">Rumik Flow · animated</option></select></label>
+      <label class="theme-control" for="themeMode"><span class="toolbar-label">Appearance</span><select id="themeMode" aria-label="Colour theme"><option value="light">Light</option><option value="dark">Dark</option><option value="paper">Warm Paper</option><option value="parchment">Parchment</option><option value="paperwhite">Paperwhite</option><option value="slate">Slate</option><option value="midnight">Midnight</option><option value="aurora">Aurora</option><option value="emerald">Emerald</option><option value="sunrise">Sunrise</option><option value="tokyo">Tokyo Night</option><option value="mocha">Catppuccin Mocha</option><option value="latte">Catppuccin Latte</option><option value="dracula">Dracula</option><option value="rose">Rosé Pine</option><option value="cyber">Cyberpunk</option></select></label>
+    </div>
+    <div class="toolbar-group header-audio-controls">
+      <button class="iconbtn" id="motionToggle" type="button" aria-label="Toggle animations" title="Toggle animations">✨ Motion</button>
+      <button class="iconbtn" id="soundToggle" type="button" aria-label="Toggle sound" title="Toggle sound">🔊 Sound</button>
+      <label class="sound-volume" title="Sound volume" for="soundVolume"><span class="volume-label">Volume</span><button class="volume-step" id="soundVolumeDown" type="button" aria-label="Decrease sound volume">−</button><input id="soundVolume" type="range" min="0" max="600" step="10" value="600" aria-label="Sound volume"><button class="volume-step" id="soundVolumeUp" type="button" aria-label="Increase sound volume">+</button><span id="soundVolumeValue">250%</span></label>
     </div>
   </nav>
 </header>
 <div id="finishModal" class="welcome-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="finishTitle"><div class="welcome-card finish-card"><div class="welcome-spark">⚠</div><p class="eyebrow">FINAL CHECK</p><h2 id="finishTitle">Finish this test?</h2><p class="muted" id="finishMessage">Your answers will be submitted and you will see your result.</p><div class="confirm-actions"><button class="btn light" id="cancelFinish" type="button">Keep attempting</button><button class="btn finish-confirm" id="confirmFinish" type="button">Yes, finish test</button></div></div></div><div id="welcomeModal" class="welcome-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle"><div class="welcome-card"><div class="welcome-spark">✦</div><p class="eyebrow">YOUR PERSONAL STUDY SPACE</p><h2 id="welcomeTitle">Make it yours.</h2><p class="muted">What should we call you? Your name will appear on your practice dashboard on this device.</p><form id="welcomeForm"><input id="nameInput" maxlength="32" autocomplete="given-name" placeholder="Enter your name" required><button class="btn welcome-submit" type="submit">Let's get started <span>→</span></button></form><p class="tiny muted">Saved only in this browser. No account required.</p></div></div>
 <main class="wrap">
 <section id="home">
-<p class="crumb">Test papers SSC · Local folder library</p>
-<h1>Previous Year Sectional Tests</h1><p class="sub">Your local test library, organized exactly like the folders on your device. JSON papers load automatically from the folders below.</p>
+<p class="crumb">SSC MTS · Personal practice library</p>
+<h1>Your test library</h1><p class="sub">Every test series, organised exactly like the folders in your library. Open a series, drill into its sub-folders, and start a paper.</p>
 <section class="home-hero" aria-label="Welcome">
-  <div class="home-hero-copy"><p class="eyebrow">SSC MTS · PRACTICE HUB</p><h2 class="hero-title" id="heroGreeting">Ready to practice?</h2><p class="home-hero-sub">Your question library is loaded and works offline. Open a section, attempt a paper, and your progress is tracked automatically in the results screen.</p></div>
+  <div class="home-hero-copy"><p class="eyebrow">SSC MTS · PRACTICE HUB</p><h2 class="hero-title" id="heroGreeting">Ready to practice?</h2><p class="home-hero-sub">Thousands of SSC MTS questions, organised and ready. Open a series, attempt a paper, and track your progress automatically.</p></div>
   <div class="home-hero-art"><svg viewBox="0 0 480 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
 <defs>
 <linearGradient id="haSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b2350"/><stop offset="1" stop-color="#0d1128"/></linearGradient>
@@ -53,30 +63,13 @@
 </svg></div>
 </section>
 
-<div class="sectioncards">
-<article class="sectioncard"><div class="sectionicon pinkicon">▤</div><div class="sectionname">ENGLISH - CHAPTERWISE TEST</div><button class="btn dark" onclick="openSection('chapterwise')">Open ↗</button></article>
-<article class="sectioncard"><div class="sectionicon purple">▤</div><div class="sectionname">Previous Year Sectional Tests - English</div><button class="btn dark" onclick="openSection('english')">Open ↗</button></article>
-<article class="sectioncard"><div class="sectionicon orange">▤</div><div class="sectionname">Previous Year Sectional Tests GK-GS</div><button class="btn dark" onclick="openSection('gk')">Open ↗</button></article>
-<article class="sectioncard"><div class="sectionicon blueicon">▤</div><div class="sectionname">Reading Comprehension</div><button class="btn dark" onclick="openSection('reading')">Open ↗</button></article>
-<article class="sectioncard"><div class="sectionicon purple">✦</div><div class="sectionname">Full Mock Tests</div><button class="btn dark" onclick="openSection('mock')">Open ↗</button></article>
-</div>
-
+<div id="homeFolders" class="folder-grid" aria-label="Test series folders"></div>
 </section>
 <section id="sectionView" class="hidden">
-<p class="crumb"><button class="textback" onclick="goHome()">← All sections</button> › <span id="sectionCrumb"></span><button class="btn secondary hidden" id="backToChildFolder" type="button">← Back to folders</button></p>
+<p class="crumb"><button class="textback" onclick="goHome()">← All series</button> › <span id="sectionCrumb"></span><button class="btn secondary hidden" id="backToChildFolder" type="button">← Back to folders</button></p>
 <h1 id="sectionHeading"></h1><p class="sub" id="sectionSubheading">Choose a folder to see the papers inside it.</p>
 <div id="sectionFolderPath" class="local-folder-path" aria-label="Current folder path"></div>
-<button id="childFolderNavigator" class="local-child-folder hidden" type="button" aria-label="Open child folder"><span class="local-child-folder-icon">📁</span><span class="local-child-folder-copy"><strong id="childFolderName">SSC MTS 2025</strong><span id="childFolderDetails">Open this folder to see its papers.</span></span><span class="local-child-folder-count" id="childFolderCount">0 papers</span><span class="folder-open-arrow">Open folder ↗</span></button>
-<div id="readingChapters" class="reading-chapters hidden">
- <div class="reading-chapters-head"><div><h2>Reading Comprehension</h2><p class="small">Open one of the four folders exactly as it appears in your local directory.</p></div><button class="btn secondary" id="allReadingChapters" type="button">← Reading folders</button></div>
- <div class="reading-chapter-grid">
-  <article class="reading-chapter-card"><div class="chapter-thumb cloze-thumb">CLOZE<br/>TEST</div><div class="chapter-copy"><strong>Cloze Test</strong><span>Folder</span><div class="chapter-count" id="count-cloze">0 tests loaded</div></div><div class="chapter-actions"><button class="btn dark chapter-view" data-chapter="cloze">Open folder ↗</button></div></article>
-  <article class="reading-chapter-card"><div class="chapter-thumb passage-thumb">PASSAGE<br/>TEST</div><div class="chapter-copy"><strong>Passage</strong><span>Folder</span><div class="chapter-count" id="count-passage">0 tests loaded</div></div><div class="chapter-actions"><button class="btn dark chapter-view" data-chapter="passage">Open folder ↗</button></div></article>
-  <article class="reading-chapter-card"><div class="chapter-thumb rearrange-thumb">SENTENCE<br/>REARRANGEMENT</div><div class="chapter-copy"><strong>Sentence Rearrangement</strong><span>Folder</span><div class="chapter-count" id="count-rearrangement">0 tests loaded</div></div><div class="chapter-actions"><button class="btn dark chapter-view" data-chapter="rearrangement">Open folder ↗</button></div></article>
-  <article class="reading-chapter-card"><div class="chapter-thumb generic-thumb">▤</div><div class="chapter-copy"><strong>Uncategorized</strong><span>Folder</span><div class="chapter-count" id="count-uncategorized">0 tests loaded</div></div><div class="chapter-actions"><button class="btn dark chapter-view" data-chapter="uncategorized">Open folder ↗</button></div></article>
- </div>
- <div class="reading-selected-head"><h3 id="readingSelectedTitle">All folders</h3><span class="small" id="readingSelectedHint">Papers appear below.</span></div>
-</div>
+<div id="folderChildren" class="folder-grid" aria-label="Sub-folders"></div>
 <div id="paperListView" class="hidden">
 <div class="paper-folder-heading"><div><span class="eyebrow">OPEN FOLDER</span><h2 id="paperFolderTitle">Papers</h2><p id="paperFolderSubtitle" class="small">Question papers stored in this folder.</p></div><span class="local-child-folder-count" id="paperFolderCount">0 papers</span></div>
 <div id="sectionLoadStatus" class="notice local-load-status hidden" role="status" aria-live="polite"></div>

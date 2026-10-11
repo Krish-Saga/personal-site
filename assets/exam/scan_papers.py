@@ -309,7 +309,10 @@ def scan():
         base = re.sub(r"[_]+", " ", base)                                 # underscores
         base = re.sub(r"[^a-z0-9\u0900-\u097F]+", " ", base)            # punctuation
         base = re.sub(r"\s+", " ", base).strip()
-        return p["section"] + "::" + base
+        # Scope the key to the paper's own folder so identically-titled papers in
+        # different sub-folders are never merged together.
+        folder = os.path.dirname(p["path"]).replace(os.sep, "/")
+        return p["section"] + "::" + folder + "::" + base
 
     groups = {}
     for p in papers:
