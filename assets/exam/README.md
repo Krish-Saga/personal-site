@@ -77,3 +77,48 @@ turn on **Settings → Pages**. Nothing else is required.
 The papers are loaded with `fetch()`, so the site must be **served over HTTP**
 (GitHub Pages, or locally with `python3 -m http.server`). Opening `index.html`
 by double-clicking will not work — browsers block reading local files that way.
+
+## Previous year papers by exam
+
+The home page has an **exam-wise** section that groups every paper by SSC exam
+and year — currently SSC CGL, CHSL, MTS and STENO, for every year present in the
+library. Open an exam, pick a year, and the papers for that exam+year open in one
+list (across the English and GK-GS folders), each attemptable with explanations
+like any other paper.
+
+The grouping is derived from your folder names: any folder whose name contains an
+exam code (CGL, CHSL, MTS, STENO, CPO, GD) **and** a year (e.g. `SSC CGL 2021`)
+is picked up automatically. To add a new exam or year:
+
+1. Create a folder named like `SSC CGL 2021` (anywhere under a series).
+2. Drop the paper JSONs inside it.
+3. Run `python3 scan_papers.py` and re-upload.
+
+The new exam/year then appears in the exam-wise section on its own.
+
+## Hunter rank system
+
+Progress is gamified, lightly and tastefully:
+
+- **Hunter rank** E → D → C → B → A → S, earned from XP (XP = questions answered
+  correctly). Shown as a badge in the header and on the home page.
+- **Daily quests** — solve 30 questions today, attempt a paper, score 80%+ in a
+  paper, keep your streak alive. Each carries an XP reward.
+- **Achievements** — 12 badges for milestones (first paper, 50 papers, 100/500
+  questions, streaks, accuracy, rank milestones).
+- **Level-ups** show a short toast and play a chime.
+
+All of it is computed from the attempts the site already stores — nothing extra to
+set up, and it resets/updates as you practise.
+
+## Study tools (evidence-based)
+
+- **Revision queue** — every question you get wrong is collected and resurfaced
+  until you answer it correctly in a later attempt. This is *retrieval practice
+  with spacing*, the technique with the strongest evidence for long-term
+  retention. "Start revision" builds a short paper from just those questions.
+- **Study timer** — a Pomodoro-style focus block (25 min work / 5 min break) with
+  a session counter for the day. Time-boxing plus short breaks keeps attention up
+  and fatigue down.
+- **Daily goal + streak** and **focus areas** (weakest folders) live in the study
+  hub, so you always know what to do next.

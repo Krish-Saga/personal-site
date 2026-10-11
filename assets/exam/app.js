@@ -762,12 +762,12 @@ $("review").innerHTML="";$("reviewQuestionList").innerHTML="";
 }
 async function toggleResultLanguage(){if(!active)return;var nextLang=active.language==="hi"?"en":"hi";var _pid=String(active.parentPaperId||active.id).replace(/-hi$/,"");var base=(papersBySection[active.section]||[]).find(function(p){return String(p.id)===_pid&&p.variants;});if(!base){for(var _s in papersBySection){var _f=(papersBySection[_s]||[]).find(function(p){return String(p.id)===_pid&&p.variants;});if(_f){base=_f;break;}}}var variant=base&&base.variants?base.variants[nextLang]:null;if(!variant){setStatus("The "+(nextLang==="hi"?"Hindi":"English")+" version is not available for "+active.title+".");return;}var qs=null;if(variant.questions&&variant.questions.length){qs=variant.questions.slice();}else{var _t=await loadPaperText(variant.embeddedKey||variant.fileName);if(typeof _t!=="string"){setStatus("That language file is missing.");return;}qs=findArray(parseQuestionJson(_t)).map(function(q,i){return normalizeQuestion(q,i);});}if(qs.length!==(active.questions||[]).length){setStatus("The two language versions have different question counts.");return;}active=Object.assign({},active,{questions:qs,questionCount:qs.length,language:nextLang,selectedLanguage:nextLang});renderReviewItems();setStatus("Answers now shown in "+(nextLang==="hi"?"Hindi":"English")+".");playSfx("select");}
 function finishTest(auto=false,confirmed=false){if(!active||$("exam").classList.contains("hidden"))return;if(!auto&&!confirmed){$("finishMessage").textContent=`You have answered ${answers.filter(a=>a!==null).length} of ${active.questions.length} questions. Submit now and view your result?`; $("finishModal").classList.remove("hidden");playTone(440,.08,.025);return;} $("finishModal").classList.add("hidden");if(!viewingSavedResult)persistProgress();clearInterval(tick);const correct=[],wrong=[],unknown=[],skip=[];active.questions.forEach((q,i)=>{const key=answerIndex(q);if(answers[i]===null)skip.push(i);else if(key===null)unknown.push(i);else if(answers[i]===key)correct.push(i);else wrong.push(i)});
- const keyCount=active.questions.filter(q=>answerIndex(q)!==null).length;const score=correct.reduce((sum,i)=>sum+(Number(active.questions[i].raw.positive_marks)||3),0)-wrong.reduce((sum,i)=>sum+(Number(active.questions[i].raw.negative_marks)||1),0); $("resultTitle").textContent=active.title+(active.section==="mock"?` · ${active.language==="hi"?"Hindi":"English"} paper`:"");$("score").textContent=keyCount?`${score} / ${active.marks}`:"Not available";$("scoreNote").textContent=keyCount?`${correct.length} correct × 3 − ${wrong.length} incorrect × 1. Marks and penalties use the JSON fields when present.`:"No recognizable answer key was found in this JSON; showing response counts only.";
+ const keyCount=active.questions.filter(q=>answerIndex(q)!==null).length;const score=correct.reduce((sum,i)=>sum+(Number(active.questions[i].raw.positive_marks)||3),0)-wrong.reduce((sum,i)=>sum+(Number(active.questions[i].raw.negative_marks)||1),0); $("resultTitle").textContent=active.title+(active.section==="mock"?` · ${active.language==="hi"?"Hindi":"English"} paper`:"");$("score").textContent=keyCount?`${score} / ${active.marks}`:"Not available";$("scoreNote").textContent=keyCount?`${correct.length} correct × 3 − ${wrong.length} incorrect × 1`:"No recognizable answer key was found in this JSON; showing response counts only.";
  $("correctN").textContent=correct.length;$("wrongN").textContent=wrong.length;$("skipN").textContent=skip.length;
  const attempted=correct.length+wrong.length, accuracy=attempted?Math.round(correct.length/attempted*10000)/100:0;
  $("accuracyN").textContent=keyCount?accuracy.toFixed(2)+"%":"—";$("rankEstimate").textContent=active.questions.length;
  $("chartCorrect").textContent=correct.length;$("chartWrong").textContent=wrong.length;$("chartSkip").textContent=skip.length;
- const maxBar=Math.max(1,active.questions.length);[["Correct",correct.length],["Wrong",wrong.length],["Skip",skip.length]].forEach(([name,val])=>{const el=$("bar"+name);el.style.height=Math.max(val?6:3,160*val/maxBar)+"px"});
+ const maxBar=Math.max(1,active.questions.length);[["Correct",correct.length],["Wrong",wrong.length],["Skip",skip.length]].forEach(([name,val])=>{const el=$("bar"+name);el.style.height=Math.max(val?6:3,150*val/maxBar)+"px"});
  $("summaryRows").innerHTML="";const row=document.createElement("tr");row.innerHTML=`<td>${esc(active.title+(active.section==="mock"?` (${active.language==="hi"?"Hindi":"English"})`:""))}</td><td>${esc(keyCount?String(score):"—")} / ${active.marks}</td><td>${attempted} / ${active.questions.length}</td><td>${keyCount?accuracy.toFixed(2)+"%":"—"}</td><td>${correct.length}</td><td>${wrong.length}</td><td>${skip.length}</td>`;$("summaryRows").appendChild(row);
  renderReviewItems();
  if(!viewingSavedResult){const identity=paperIdentity(active,active.section||currentSection);const attemptRecord={id:Date.now(),date:new Date().toISOString(),profileId:activeProfileId,profileName:profileDisplayName(),paperKey:identity,paperIdentity:identity,title:active.title,section:active.section||currentSection,fileName:active.fileName||"",language:active.language||"",chapter:active.chapter||"",score:keyCount?score:null,total:active.marks||active.questions.length*3,correct:correct.length,incorrect:wrong.length,unanswered:skip.length,attempted:attempted,accuracy:keyCount?accuracy:null,answers:answers.slice(),marked:[...markedQuestions],questionCount:active.questions.length,questionSnapshot:active.questions.map(q=>({raw:q.raw||null,text:q.text,options:q.options,answer:q.answer,explanation:q.explanation})),marks:active.marks||active.questions.length*3,minutes:active.minutes||25};let history=[];try{history=JSON.parse(localStorage.getItem("sscAttemptHistory")||"[]")}catch(e){}history.unshift(attemptRecord);history=history.slice(0,800);history.forEach(function(r,i){if(i>=8&&r.questionSnapshot)delete r.questionSnapshot;});const latestByPaper={};history.forEach(r=>{const k=r.paperIdentity||r.paperKey||(String(r.section||"legacy")+"::"+String(r.title||"untitled"));if(!latestByPaper[k])latestByPaper[k]=r});try{localStorage.setItem("sscAttemptHistory",JSON.stringify(history));localStorage.setItem("sscLatestResults",JSON.stringify(latestByPaper));localStorage.setItem("sscLastAttempt",JSON.stringify(attemptRecord))}catch(e){setStatus("Result calculated, but browser storage is full. Export your results to keep a copy.")}}setResultView("overview");show("results");if(!viewingSavedResult)celebrate(correct.length,active.questions.length);viewingSavedResult=false}
@@ -1761,4 +1761,382 @@ function scrollPageToTop(){
   }
   function hook() { inject(); if (typeof window.show === "function" && !window.show.__hubHooked) { var o = window.show; var w = function (s) { var r = o.apply(this, arguments); if (s === "home") setTimeout(render, 60); return r; }; w.__hubHooked = true; window.show = w; } }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { setTimeout(hook, 400); }); else setTimeout(hook, 400);
+})();
+
+/* =====================================================================
+   ROUND 3 — "Previous year papers by exam" index + a hunter-rank system
+   (ranks, daily quests, achievements). Additive: wraps renderHome and
+   reads only the app's own data. Nothing existing is modified.
+   ===================================================================== */
+(function () {
+  "use strict";
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]; }); }
+  function plural(n, w) { return Number(n).toLocaleString("en-IN") + " " + w + (n === 1 ? "" : "s"); }
+  function hist() { try { return (typeof window.readAttemptHistory === "function") ? window.readAttemptHistory() : JSON.parse(localStorage.getItem("sscAttemptHistory") || "[]"); } catch (e) { return []; } }
+  function dayKey(d) { return d.toISOString().slice(0, 10); }
+  function streak(h) { var set = {}; h.forEach(function (r) { try { set[dayKey(new Date(r.date))] = 1; } catch (e) {} }); var n = 0, d = new Date(); if (!set[dayKey(d)]) d.setDate(d.getDate() - 1); while (set[dayKey(d)]) { n++; d.setDate(d.getDate() - 1); } return n; }
+  function pct(r) { var t = Number(r.total) || 0, s = Number(r.score); if (!isFinite(s)) s = 0; if (t > 0) return Math.max(0, Math.min(100, (s / t) * 100)); var a = Number(r.accuracy); return isFinite(a) ? Math.max(0, Math.min(100, a)) : 0; }
+  function stats(h) {
+    var att = 0, corr = 0, best = 0, accSum = 0, accCnt = 0, today = 0, todayPapers = 0, bestToday = 0, todayKey = dayKey(new Date());
+    h.forEach(function (r) {
+      att += Number(r.attempted) || 0; corr += Number(r.correct) || 0;
+      var p = pct(r); if (p > best) best = p;
+      var a = Number(r.accuracy); if (isFinite(a)) { accSum += a; accCnt++; }
+      try { if (dayKey(new Date(r.date)) === todayKey) { today += Number(r.attempted) || 0; todayPapers++; bestToday = Math.max(bestToday, a || 0); } } catch (e) {}
+    });
+    return { attempts: h.length, att: att, corr: corr, best: Math.round(best), acc: att ? Math.round(corr / att * 100) : (accCnt ? Math.round(accSum / accCnt) : 0), xp: corr, today: today, todayPapers: todayPapers, bestToday: Math.round(bestToday), streak: streak(h) };
+  }
+  var RANKS = [
+    { k: "E", n: "E-Rank", min: 0 }, { k: "D", n: "D-Rank", min: 100 },
+    { k: "C", n: "C-Rank", min: 300 }, { k: "B", n: "B-Rank", min: 700 },
+    { k: "A", n: "A-Rank", min: 1500 }, { k: "S", n: "S-Rank", min: 3000 }
+  ];
+  function rankFor(xp) { var r = RANKS[0]; RANKS.forEach(function (x) { if (xp >= x.min) r = x; }); return r; }
+  function nextRank(xp) { for (var i = 0; i < RANKS.length; i++) { if (xp < RANKS[i].min) return RANKS[i]; } return null; }
+
+  /* ---------- exam index (SSC CGL / CHSL / MTS / STENO by year) ---------- */
+  var EXAM_INDEX = null;
+  function buildExamIndex() {
+    var map = {};
+    (typeof FOLDER_TREE !== "undefined" ? FOLDER_TREE : []).forEach(function (root) {
+      (root.children || []).forEach(function (l2) {
+        (l2.children || []).forEach(function (l3) {
+          var nm = String(l3.name || "");
+          var m = nm.match(/\b(CGL|CHSL|MTS|STENO|CPO|GD)\b/i);
+          var y = (nm.match(/\b(20\d{2})\b/) || [])[1];
+          if (!m || !y || !l3.papers.length) return;
+          var ex = m[1].toUpperCase();
+          var o = map[ex] || (map[ex] = { exam: ex, years: {}, count: 0, q: 0, section: null });
+          var yr = o.years[y] || (o.years[y] = { year: y, papers: [], count: 0, q: 0 });
+          l3.papers.forEach(function (p) {
+            yr.papers.push(p); yr.count++; yr.q += Number(p.questionCount) || 0;
+            o.count++; o.q += Number(p.questionCount) || 0;
+            if (!o.section) o.section = p.section || null;
+          });
+        });
+      });
+    });
+    return map;
+  }
+  function renderExamIndex() {
+    var host = $("homeExams"); if (!host) return;
+    EXAM_INDEX = buildExamIndex();
+    var keys = Object.keys(EXAM_INDEX).sort(function (a, b) { return EXAM_INDEX[b].count - EXAM_INDEX[a].count; });
+    if (!keys.length) { host.innerHTML = ""; return; }
+    var html = '<div class="home-section-head"><div><p class="hub-eyebrow">Exam-wise library</p><h2>Previous year papers by exam</h2></div>'
+      + '<p class="hub-sub">Every CGL, CHSL, MTS and STENO paper in your library, grouped by year.</p></div><div class="exam-grid">';
+    keys.forEach(function (k) {
+      var o = EXAM_INDEX[k], years = Object.keys(o.years).sort().reverse();
+      html += '<article class="exam-card" data-exam="' + esc(k) + '" role="link" tabindex="0">'
+        + '<div class="exam-card-top"><span class="exam-badge">SSC ' + esc(k) + '</span><span class="exam-years">' + years.length + " year" + (years.length === 1 ? "" : "s") + '</span></div>'
+        + '<div class="exam-card-years">' + years.map(function (y) { return '<span class="exam-year-chip">' + y + '</span>'; }).join("") + '</div>'
+        + '<div class="exam-card-foot"><span>' + plural(o.count, "paper") + " \u00b7 " + plural(o.q, "question") + '</span><span class="folder-card-go">Open <b>\u2197</b></span></div>'
+        + '</article>';
+    });
+    html += "</div>";
+    host.innerHTML = html;
+    host.querySelectorAll(".exam-card").forEach(function (c) {
+      var go = function () { openExam(c.getAttribute("data-exam")); };
+      c.addEventListener("click", go);
+      c.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
+    });
+  }
+  function openSynthetic(trail) {
+    if (!trail || !trail.length) return;
+    navTrail = trail.slice();
+    var node = navTrail[navTrail.length - 1];
+    if (node.section) currentSection = node.section;
+    folderOpen = node.depth > 0;
+    papers = (node.papers || []).slice();
+    if (typeof playSfx === "function") playSfx("select");
+    show("sectionView"); renderSectionView(); if (typeof scrollPageToTop === "function") scrollPageToTop();
+  }
+  function openExam(key) {
+    var o = EXAM_INDEX && EXAM_INDEX[key]; if (!o) return;
+    var examNode = { name: "SSC " + key, kind: "exam", examKey: key, depth: 0, section: o.section, path: ["SSC " + key], children: [], papers: [], count: o.count, totalQuestions: o.q };
+    Object.keys(o.years).sort().reverse().forEach(function (y) {
+      var yr = o.years[y];
+      var yNode = { name: key + " " + y, kind: "year", examKey: key, depth: 1, section: o.section, path: ["SSC " + key, key + " " + y], children: [], papers: yr.papers.slice(), count: yr.count, totalQuestions: yr.q, _parent: examNode };
+      examNode.children.push(yNode);
+    });
+    openSynthetic([examNode]);
+  }
+
+  /* ---------- hunter-rank system ---------- */
+  function quests(s) {
+    return [
+      { label: "Solve 30 questions today", have: Math.min(s.today, 30), need: 30, xp: 50 },
+      { label: "Attempt a paper today", have: Math.min(s.todayPapers, 1), need: 1, xp: 30 },
+      { label: "Score 80%+ in a paper today", have: s.bestToday >= 80 ? 1 : 0, need: 1, xp: 40 },
+      { label: "Keep your streak alive", have: s.streak > 0 ? 1 : 0, need: 1, xp: 20 }
+    ];
+  }
+  var ACH = [
+    { n: "First Step", d: "Attempt your first paper", on: function (s) { return s.attempts >= 1; } },
+    { n: "Getting Serious", d: "Attempt 10 papers", on: function (s) { return s.attempts >= 10; } },
+    { n: "Grinder", d: "Attempt 50 papers", on: function (s) { return s.attempts >= 50; } },
+    { n: "Century", d: "Solve 100 questions", on: function (s) { return s.att >= 100; } },
+    { n: "Half-Millennium", d: "Solve 500 questions", on: function (s) { return s.att >= 500; } },
+    { n: "On Fire", d: "Reach a 3-day streak", on: function (s) { return s.streak >= 3; } },
+    { n: "Unbroken", d: "Reach a 7-day streak", on: function (s) { return s.streak >= 7; } },
+    { n: "Sharpshooter", d: "80%+ accuracy (20+ solved)", on: function (s) { return s.acc >= 80 && s.att >= 20; } },
+    { n: "Sniper", d: "90%+ accuracy (20+ solved)", on: function (s) { return s.acc >= 90 && s.att >= 20; } },
+    { n: "D-Rank Hunter", d: "Reach D-Rank", on: function (s) { return s.xp >= 100; } },
+    { n: "B-Rank Hunter", d: "Reach B-Rank", on: function (s) { return s.xp >= 700; } },
+    { n: "S-Rank Hunter", d: "Reach S-Rank", on: function (s) { return s.xp >= 3000; } }
+  ];
+  function ensureHeaderRank() {
+    var tools = document.querySelector(".header-primary-tools"); if (!tools || $("rankChip")) return;
+    var b = document.createElement("button");
+    b.id = "rankChip"; b.type = "button"; b.className = "rank-chip"; b.title = "Your hunter rank";
+    b.setAttribute("aria-label", "Your hunter rank");
+    b.onclick = function () { var el = $("gamePanel"); if (el) el.scrollIntoView({ behavior: "smooth", block: "center" }); };
+    tools.insertBefore(b, tools.firstChild);
+  }
+  function paintHeaderRank(s) {
+    var b = $("rankChip"); if (!b) return;
+    var r = rankFor(s.xp);
+    b.innerHTML = '<span class="rank-chip-letter">' + r.k + '</span><span class="rank-chip-copy"><strong>' + r.n + '</strong><span>' + s.xp.toLocaleString("en-IN") + " XP</span></span>";
+    b.setAttribute("data-rank", r.k);
+  }
+  function toast(msg, sub) {
+    var t = document.createElement("div");
+    t.className = "game-toast";
+    t.setAttribute("role", "status");
+    t.innerHTML = '<span class="game-toast-ic">\u2b50</span><div><strong>' + esc(msg) + '</strong>' + (sub ? '<span>' + esc(sub) + '</span>' : "") + "</div>";
+    document.body.appendChild(t);
+    requestAnimationFrame(function () { t.classList.add("show"); });
+    setTimeout(function () { t.classList.remove("show"); setTimeout(function () { t.remove(); }, 400); }, 3400);
+  }
+  function checkLevelUp(s) {
+    var lvl = Math.floor(s.xp / 100) + 1, r = rankFor(s.xp);
+    var prev = null; try { prev = localStorage.getItem("sscGameLevel"); } catch (e) {}
+    if (prev === null) { try { localStorage.setItem("sscGameLevel", String(lvl)); localStorage.setItem("sscGameRank", r.k); } catch (e) {} return; }
+    if (lvl > Number(prev)) { toast("Level up \u2014 Lv " + lvl, "Keep going, hunter."); if (typeof playSfx === "function") playSfx("success"); }
+    var pr = null; try { pr = localStorage.getItem("sscGameRank"); } catch (e) {}
+    if (pr && pr !== r.k) toast("Rank up \u2014 " + r.n, "Your hunter rank increased.");
+    try { localStorage.setItem("sscGameLevel", String(lvl)); localStorage.setItem("sscGameRank", r.k); } catch (e) {}
+  }
+  function renderGame() {
+    ensureHeaderRank();
+    var h = hist(), s = stats(h), r = rankFor(s.xp), nx = nextRank(s.xp);
+    paintHeaderRank(s);
+    checkLevelUp(s);
+    var host = $("gamePanel"); if (!host) return;
+    var spanFrom = r.min, spanTo = nx ? nx.min : r.min, prog = nx ? Math.round((s.xp - spanFrom) / Math.max(1, spanTo - spanFrom) * 100) : 100;
+    var out = "";
+    out += '<div class="sys-panel">'
+      + '<div class="sys-rank"><div class="sys-rank-badge" data-rank="' + r.k + '">' + r.k + '</div>'
+      + '<div class="sys-rank-copy"><p class="hub-eyebrow">Hunter rank</p><h3>' + r.n + '</h3>'
+      + '<p class="hub-sub">' + (nx ? (plural(nx.min - s.xp, "XP") + " to " + nx.n) : "Highest rank reached") + '</p></div></div>'
+      + '<div class="sys-xp"><div class="sys-xp-head"><span>' + s.xp.toLocaleString("en-IN") + " XP</span><span>" + (nx ? (spanFrom + "\u2013" + spanTo) : "MAX") + '</span></div><div class="hub-bar"><i style="width:' + Math.max(2, prog) + '%"></i></div></div>'
+      + "</div>";
+    out += '<div class="hub-card sys-quests"><div class="hub-card-head"><h3>Daily quests</h3><span class="hub-sub">Resets every day</span></div>';
+    quests(s).forEach(function (q) {
+      var done = q.have >= q.need, p = Math.min(100, Math.round(q.have / q.need * 100));
+      out += '<div class="quest-row' + (done ? " done" : "") + '"><div class="quest-main"><span class="quest-check">' + (done ? "\u2713" : "") + '</span><div><strong>' + esc(q.label) + '</strong><div class="quest-bar"><i style="width:' + p + '%"></i></div></div></div><span class="quest-xp">+' + q.xp + ' XP</span></div>';
+    });
+    out += "</div>";
+    out += '<div class="hub-card sys-ach"><div class="hub-card-head"><h3>Achievements</h3><span class="hub-sub">' + ACH.filter(function (a) { return a.on(s); }).length + " / " + ACH.length + ' earned</span></div><div class="ach-grid">';
+    ACH.forEach(function (a) { var on = a.on(s); out += '<div class="ach' + (on ? " on" : "") + '" title="' + esc(a.d) + '"><span class="ach-dot"></span><div><strong>' + esc(a.n) + '</strong><span>' + esc(a.d) + '</span></div></div>'; });
+    out += "</div></div>";
+    host.innerHTML = out;
+  }
+  function injectPanels() {
+    var home = $("home"); if (!home) return;
+    if (!$("homeExams")) {
+      var ex = document.createElement("section");
+      ex.id = "homeExams"; ex.className = "home-exams"; ex.setAttribute("aria-label", "Previous year papers by exam");
+      var hf = $("homeFolders");
+      if (hf && hf.parentNode) hf.parentNode.insertBefore(ex, hf); else home.appendChild(ex);
+    }
+    if (!$("gamePanel")) {
+      var gp = document.createElement("section");
+      gp.id = "gamePanel"; gp.className = "game-panel"; gp.setAttribute("aria-label", "Your hunter rank and quests");
+      var sp = $("studyPanel");
+      if (sp && sp.parentNode) sp.parentNode.insertBefore(gp, sp.nextSibling);
+      else { var ex2 = $("homeExams"); if (ex2 && ex2.parentNode) ex2.parentNode.insertBefore(gp, ex2); else home.appendChild(gp); }
+    }
+  }
+  function refresh() { injectPanels(); try { renderExamIndex(); } catch (e) { console.error("exam index", e); } try { renderGame(); } catch (e) { console.error("game", e); } }
+  /* wrap renderHome (nav calls it on load and on goHome) */
+  if (typeof window.renderHome === "function" && !window.renderHome.__extraHooked) {
+    var rh = window.renderHome;
+    var w = function () { var r = rh.apply(this, arguments); try { refresh(); } catch (e) { console.error(e); } return r; };
+    w.__extraHooked = true; window.renderHome = w;
+  }
+  /* make the breadcrumb / back buttons understand the synthetic exam nodes */
+  if (typeof window.navigateFolderBreadcrumb === "function" && !window.navigateFolderBreadcrumb.__extraHooked) {
+    var nb = window.navigateFolderBreadcrumb;
+    var wnb = function (level) { if (level < 0) { return nb.call(this, level); } var node = navTrail[level]; if (node && node.kind) { openSynthetic(navTrail.slice(0, level + 1)); return; } return nb.apply(this, arguments); };
+    wnb.__extraHooked = true; window.navigateFolderBreadcrumb = wnb;
+  }
+  if (typeof window.openFolderNode === "function" && !window.openFolderNode.__extraHooked) {
+    var ofn = window.openFolderNode;
+    var wofn = function (node) {
+      if (node && node.kind) {
+        var trail = [], n = node;
+        while (n) { trail.unshift(n); n = n._parent; }
+        openSynthetic(trail); return;
+      }
+      return ofn.apply(this, arguments);
+    };
+    wofn.__extraHooked = true; window.openFolderNode = wofn;
+  }
+  if (typeof window.backToFolders === "function" && !window.backToFolders.__extraHooked) {
+    var bf = window.backToFolders;
+    var wbf = function () { if (navTrail.length > 1) { var p = navTrail[navTrail.length - 2]; if (p && p.kind) { openSynthetic(navTrail.slice(0, -1)); return; } } return bf.apply(this, arguments); };
+    wbf.__extraHooked = true; window.backToFolders = wbf;
+  }
+  function hook() { refresh(); if (typeof window.show === "function" && !window.show.__extraShowHooked) { var o = window.show; var w2 = function (s) { var r = o.apply(this, arguments); if (s === "home") setTimeout(refresh, 70); return r; }; w2.__extraShowHooked = true; window.show = w2; } }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { setTimeout(hook, 500); }); else setTimeout(hook, 500);
+})();
+
+/* =====================================================================
+   ROUND 4 — science-backed study tools:
+     • Revision queue  (retrieval practice + spacing: mistakes resurface
+       until you get them right in a later attempt)
+     • Focus timer     (Pomodoro-style work/break cycles)
+   Additive: reads the app's own attempt history, adds one home section.
+   ===================================================================== */
+(function () {
+  "use strict";
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]; }); }
+  function hist() { try { return (typeof window.readAttemptHistory === "function") ? window.readAttemptHistory() : JSON.parse(localStorage.getItem("sscAttemptHistory") || "[]"); } catch (e) { return []; } }
+  function hash(s) { var h = 5381, i = String(s).length; while (i) h = (h * 33) ^ String(s).charCodeAt(--i); return (h >>> 0).toString(36); }
+  function qkey(q) { return hash((q.text || "") + "|" + (q.options || []).map(function (o) { return o.text; }).join("|")); }
+  function correctIndex(q) { try { return (typeof answerIndex === "function") ? answerIndex(q) : null; } catch (e) { return null; } }
+
+  /* ---------- revision queue: mistakes from your newest attempt per question ---------- */
+  function mistakeBank() {
+    var seen = {}, out = [];
+    hist().forEach(function (r) {
+      if (!r.questionSnapshot || !r.answers) return;
+      r.questionSnapshot.forEach(function (q, i) {
+        if (!q || !Array.isArray(q.options) || !q.options.length) return;
+        var key = qkey(q);
+        if (seen[key]) return; seen[key] = 1;
+        var corr = correctIndex(q);
+        if (corr === null) return;
+        var mine = Number.isInteger(r.answers[i]) ? r.answers[i] : null;
+        if (mine === null) return;          /* never attempted -> not a "mistake" */
+        if (mine === corr) return;          /* already resolved in a later attempt */
+        out.push({ key: key, q: q, mine: mine, corr: corr, title: r.title || "Paper", date: r.date });
+      });
+    });
+    return out;
+  }
+  function topicsOf(items) {
+    var by = {};
+    items.forEach(function (x) {
+      var f = String(x.title || "").split("/");
+      var name = String(x.title || "Other");
+      by[name] = (by[name] || 0) + 1;
+    });
+    return Object.keys(by).map(function (k) { return { name: k, n: by[k] }; }).sort(function (a, b) { return b.n - a.n; }).slice(0, 3);
+  }
+  function startRevision(items) {
+    if (!items.length) return;
+    var qs = items.map(function (x) { return x.q; });
+    var paper = {
+      title: "Revision \u2014 " + qs.length + " mistake" + (qs.length === 1 ? "" : "s"),
+      fileName: "__revision__", section: (typeof currentSection !== "undefined" ? currentSection : "revision"),
+      minutes: Math.max(5, Math.ceil(qs.length * 1.2)), marks: qs.length * 3,
+      questions: qs, questionCount: qs.length, language: "en"
+    };
+    if (typeof start === "function") start(paper);
+  }
+  function renderRevision() {
+    var host = $("revisionPanel"); if (!host) return;
+    var items = mistakeBank();
+    var topics = topicsOf(items);
+    var html = '<div class="home-section-head"><div><p class="hub-eyebrow">Retrieval practice</p><h2>Revision queue</h2></div>'
+      + '<p class="hub-sub">Questions you got wrong come back until you get them right in a later attempt \u2014 the fastest known way to make them stick.</p></div>';
+    if (!items.length) {
+      html += '<div class="hub-card rev-empty"><strong>Nothing to revise right now</strong><span class="hub-sub">Attempt a paper \u2014 anything you get wrong will appear here for review.</span></div>';
+    } else {
+      html += '<div class="hub-card rev-card"><div class="rev-head"><div class="rev-count"><strong>' + items.length + '</strong><span>question' + (items.length === 1 ? "" : "s") + ' to review</span></div>'
+        + '<button class="hub-btn primary" id="revStart" type="button">Start revision \u2192</button></div>'
+        + '<div class="rev-topics">' + topics.map(function (t) { return '<span class="rev-chip">' + esc(String(t.name).slice(0, 42)) + " \u00b7 " + t.n + '</span>'; }).join("") + '</div>'
+        + '<p class="rev-note">Answer these again from memory. Anything you get right is removed from the queue automatically.</p></div>';
+    }
+    host.innerHTML = html;
+    var b = $("revStart"); if (b) b.onclick = function () { startRevision(items); };
+  }
+
+  /* ---------- focus timer (Pomodoro-style) ---------- */
+  var POMO = { work: 25 * 60, brk: 5 * 60 };
+  function pomoLoad() { try { return JSON.parse(localStorage.getItem("sscPomo") || "null") || { mode: "work", left: POMO.work, running: false, endsAt: 0, sessions: 0, day: "" }; } catch (e) { return { mode: "work", left: POMO.work, running: false, endsAt: 0, sessions: 0, day: "" }; } }
+  function pomoSave(s) { try { localStorage.setItem("sscPomo", JSON.stringify(s)); } catch (e) {} }
+  function todayStr() { return new Date().toISOString().slice(0, 10); }
+  function fmt(t) { t = Math.max(0, Math.round(t)); var m = Math.floor(t / 60), s = t % 60; return String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0"); }
+  var pomoTick = null;
+  function renderPomo() {
+    var host = $("focusPanel"); if (!host) return;
+    var s = pomoLoad();
+    if (s.day !== todayStr()) { s.day = todayStr(); s.sessions = 0; }
+    var left = s.running && s.endsAt ? (s.endsAt - Date.now()) / 1000 : s.left;
+    if (s.running && left <= 0) {
+      s.running = false;
+      if (s.mode === "work") { s.mode = "brk"; s.left = POMO.brk; s.sessions++; } else { s.mode = "work"; s.left = POMO.work; }
+      pomoSave(s);
+      if (typeof playSfx === "function") playSfx("success");
+      if (typeof window.__pomoToast === "function") window.__pomoToast(s.mode === "brk" ? "Focus session done \u2014 take a 5-minute break." : "Break over \u2014 back to it.");
+    }
+    var total = s.mode === "work" ? POMO.work : POMO.brk;
+    var prog = Math.max(0, Math.min(100, Math.round((1 - left / total) * 100)));
+    host.innerHTML = '<div class="home-section-head"><div><p class="hub-eyebrow">Focus</p><h2>Study timer</h2></div>'
+      + '<p class="hub-sub">Work in focused blocks and take short breaks \u2014 time-boxing keeps attention high and fatigue low.</p></div>'
+      + '<div class="hub-card focus-card"><div class="focus-left"><div class="focus-ring" style="--p:' + prog + '"><strong id="focusClock">' + fmt(left) + '</strong><span>' + (s.mode === "work" ? "Focus" : "Break") + '</span></div>'
+      + '<div class="focus-meta"><p class="hub-card-eyebrow">' + (s.mode === "work" ? "Focus block" : "Short break") + '</p><h3>' + (s.running ? "Running" : "Paused") + '</h3>'
+      + '<p class="hub-sub">' + s.sessions + ' focus session' + (s.sessions === 1 ? "" : "s") + ' completed today</p></div></div>'
+      + '<div class="focus-actions"><button class="hub-btn primary" id="pomoToggle" type="button">' + (s.running ? "Pause" : "Start") + '</button>'
+      + '<button class="settings-btn ghost" id="pomoReset" type="button">Reset</button></div></div>';
+    var t = $("pomoToggle"); if (t) t.onclick = function () {
+      var st = pomoLoad();
+      if (st.running) { st.left = (st.endsAt - Date.now()) / 1000; st.running = false; }
+      else { st.running = true; st.endsAt = Date.now() + (st.left > 0 ? st.left : POMO[st.mode === "work" ? "work" : "brk"]) * 1000; if (!st.left) st.left = POMO[st.mode === "work" ? "work" : "brk"]; }
+      pomoSave(st); if (typeof playSfx === "function") playSfx("select"); renderPomo();
+    };
+    var r = $("pomoReset"); if (r) r.onclick = function () { var st = pomoLoad(); st.running = false; st.mode = "work"; st.left = POMO.work; st.endsAt = 0; pomoSave(st); renderPomo(); };
+  }
+  function pomoLoop() {
+    if (pomoTick) return;
+    pomoTick = setInterval(function () {
+      var s = pomoLoad();
+      if (!s.running) return;
+      var left = (s.endsAt - Date.now()) / 1000;
+      if (left <= 0) { renderPomo(); return; }
+      var c = $("focusClock"); if (c) c.textContent = fmt(left);
+      var ring = document.querySelector(".focus-ring");
+      var total = s.mode === "work" ? POMO.work : POMO.brk;
+      if (ring) ring.style.setProperty("--p", Math.max(0, Math.min(100, Math.round((1 - left / total) * 100))));
+    }, 1000);
+  }
+
+  function inject() {
+    var home = $("home"); if (!home) return;
+    if (!$("revisionPanel")) {
+      var rp = document.createElement("section");
+      rp.id = "revisionPanel"; rp.className = "home-exams"; rp.setAttribute("aria-label", "Revision queue");
+      var ex = $("homeExams");
+      if (ex && ex.parentNode) ex.parentNode.insertBefore(rp, ex); else home.appendChild(rp);
+    }
+    if (!$("focusPanel")) {
+      var fp = document.createElement("section");
+      fp.id = "focusPanel"; fp.className = "home-exams"; fp.setAttribute("aria-label", "Study timer");
+      var rp2 = $("revisionPanel");
+      if (rp2 && rp2.parentNode) rp2.parentNode.insertBefore(fp, rp2.nextSibling); else home.appendChild(fp);
+    }
+  }
+  function refresh() { inject(); try { renderRevision(); } catch (e) { console.error("revision", e); } try { renderPomo(); } catch (e) { console.error("pomo", e); } }
+  if (typeof window.renderHome === "function" && !window.renderHome.__study2Hooked) {
+    var rh = window.renderHome;
+    var w = function () { var r = rh.apply(this, arguments); try { refresh(); } catch (e) {} return r; };
+    w.__study2Hooked = true; window.renderHome = w;
+  }
+  function hook() { refresh(); pomoLoop(); if (typeof window.show === "function" && !window.show.__study2Hooked) { var o = window.show; var w2 = function (s) { var r = o.apply(this, arguments); if (s === "home") setTimeout(refresh, 90); return r; }; w2.__study2Hooked = true; window.show = w2; } }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { setTimeout(hook, 600); }); else setTimeout(hook, 600);
 })();
