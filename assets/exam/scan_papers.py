@@ -226,10 +226,24 @@ def slugify(s):
 
 
 def devanagari_ratio(text):
-    plain = re.sub(r"<[^>]+>", "", text)
+    """Ratio of Devanagari letters, ignoring solutions (which often carry a
+    Hindi line even in English papers)."""
+    plain = re.sub(r"<[^>]+>", " ", text)
     dev = len(re.findall(r"[\u0900-\u097F]", plain))
     tot = len(re.findall(r"[A-Za-z\u0900-\u097F]", plain)) or 1
     return dev / tot
+
+
+def paper_language(qs):
+    """Hindi only when the QUESTIONS/options are actually Hindi."""
+    chunks = []
+    for q in qs[:60]:
+        if not isinstance(q, dict):
+            continue
+        for k, v in q.items():
+            if k == "question" or k.startswith("option") and "image" not in k:
+                chunks.append(str(v))
+    return "hi" if devanagari_ratio(" ".join(chunks)) > 0.15 else "en"
 
 
 def scan():
@@ -261,7 +275,7 @@ def scan():
             m = re.match(r"^(\d+)", fn)
             tid = str(first.get("test_id") or first.get("testId") or first.get("id") or (m.group(1) if m else ""))
             title = TITLES.get(tid) or os.path.splitext(fn)[0]
-            lang = "hi" if devanagari_ratio(raw) > 0.02 else "en"
+            lang = paper_language(qs)
             marks = 0
             for q in qs:
                 try:
@@ -287,9 +301,19 @@ def scan():
             })
 
     # group bilingual pairs (same section + title, different language)
+    def pair_key(p):
+        """Group English/Hindi twins even when filenames differ slightly."""
+        base = p["title"].lower()
+        base = re.sub(r"\.json$", "", base)
+        base = re.sub(r"\b(hindi|english|hin|eng)\b", "", base)          # language words
+        base = re.sub(r"[_]+", " ", base)                                 # underscores
+        base = re.sub(r"[^a-z0-9\u0900-\u097F]+", " ", base)            # punctuation
+        base = re.sub(r"\s+", " ", base).strip()
+        return p["section"] + "::" + base
+
     groups = {}
     for p in papers:
-        groups.setdefault(p["section"] + "::" + p["title"], []).append(p)
+        groups.setdefault(pair_key(p), []).append(p)
     for key, group in groups.items():
         langs = sorted({p["language"] for p in group})
         if len(langs) > 1:

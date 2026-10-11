@@ -363,8 +363,8 @@ function ingestManifestPaper(p){
  const section=p.section||slugify(p.sectionLabel);
  const target=papersBySection[section]||(papersBySection[section]=[]);
  const item={id:String(p.id||""),title:String(p.title||p.id||"Question paper"),language:String(p.language||"en"),questions:[],questionCount:Number(p.questionCount)||0,fileName:p.path,embeddedKey:p.path,raw:null,chapter:p.chapter||null,minutes:Number(p.minutes)||25,marks:Number(p.marks)||75,section:section,subLabel:p.subLabel||null,sectionLabel:p.sectionLabel||null};
- let grouped=target.find(function(x){return x.title===item.title&&(x.variants||(x.language&&x.language!==item.language));});
- if(grouped){if(!grouped.variants){grouped.variants={};grouped.variants[grouped.language]=grouped;}grouped.variants[item.language]=item;}
+ let grouped=null;if(p.groupKey){grouped=target.find(function(x){return x.groupKey===p.groupKey;});}if(!grouped){grouped=target.find(function(x){return x.title===item.title&&(x.variants||(x.language&&x.language!==item.language));});}
+ item.groupKey=p.groupKey||null;if(grouped){if(!grouped.variants){grouped.variants={};grouped.variants[grouped.language]=grouped;}grouped.variants[item.language]=item;}
  else target.push(item);
 }
 async function loadFolderLibrary(){
@@ -387,7 +387,23 @@ async function loadFolderLibrary(){
   const counts={};
   list.forEach(function(p){ingestManifestPaper(p);const lbl=(p.sectionLabel||p.section)+" / "+(p.subLabel||"Uncategorized");counts[lbl]=(counts[lbl]||0)+1;});
   LOCAL_FOLDER_SPECS.forEach(function(spec){sectionFolderResults[spec.label]={count:counts[spec.label]||0,error:(counts[spec.label]?null:"No JSON papers in "+spec.label+".")};});
-  if(typeof addCards==="function")addCards(LOCAL_FOLDER_SPECS);
+  ensureSectionCards();
+  function ensureSectionCards(){
+   var host=document.querySelector(".sectioncards"); if(!host) return;
+   var seenLabel={};
+   host.querySelectorAll(".sectionname").forEach(function(el){seenLabel[(el.textContent||"").trim().toLowerCase()]=1;});
+   var done={};
+   (LOCAL_FOLDER_SPECS||[]).forEach(function(sp){
+    var sec=sp.section; if(!sec||done[sec])return; done[sec]=1;
+    var label=String(sp.sectionLabel||SECTION_LABELS[sec]||sec);
+    if(seenLabel[label.trim().toLowerCase()])return;
+    if(host.querySelector('[data-cat="'+sec+'"]'))return;
+    var art=document.createElement("article"); art.className="sectioncard"; art.setAttribute("data-cat",sec); art.setAttribute("role","link"); art.tabIndex=0;
+    art.innerHTML='<div class="sectionicon purple" style="font-size:24px">\u25a4</div><div class="sectionname">'+esc(label)+'</div><button class="btn dark" type="button">Open \u2197</button>';
+    art.addEventListener("click",function(){try{openSection(sec);}catch(e){}});
+    host.appendChild(art);
+   });
+  }
   probePaperPaths().then(function(info){
    if(!info.checked)return;
    if(info.reachable<100){
@@ -523,7 +539,7 @@ async function start(p){
  if(!active.questions.length){setStatus("This paper has no usable questions. Check the JSON file in its local folder.");return;}
  answers=Array(active.questions.length).fill(null);current=0;markedQuestions=new Set();visitedQuestions=new Set();timerPaused=false;
  try{const saved=JSON.parse(localStorage.getItem(progressKey(active))||"null");if(saved&&saved.answers?.length===answers.length){answers=saved.answers.map(a=>Number.isInteger(a)?a:null);markedQuestions=new Set((saved.marked||[]).filter(i=>Number.isInteger(i)&&i>=0&&i<answers.length));}}catch(e){}
- remaining=Math.max(1,Number(active.minutes)||25)*60;startedAt=Date.now();show("exam");const mockToggle=$("mockLanguageToggle");if(mockToggle){mockToggle.style.display=(active.section==="mock"||paperHasBothLanguages(active.parentPaperId||active.id))?"inline-flex":"none";mockToggle.textContent=active.language==="hi"?"Switch to English":"Switch to Hindi";}$("examTitle").textContent=active.title||"SSC MTS Practice Test";$("examMeta").textContent=`${active.questions.length} Questions · ${Math.max(1,Number(active.minutes)||25)} Minutes · ${active.marks||active.questions.length*3} Marks${active.section==="mock"?` · ${active.language==="hi"?"Hindi":"English"}`:""}`;clearInterval(tick);renderTimer();tick=setInterval(()=>{if(timerPaused)return;remaining=Math.max(0,remaining-1);renderTimer();if(remaining<=0){clearInterval(tick);finishTest(true)}},1000);try{renderQuestion()}catch(err){console.error("Question render failed",err);$("qText").textContent="Could not render this question. Check this paper’s JSON file.";$("options").textContent=err.message||"Rendering error"}}
+ remaining=Math.max(1,Number(active.minutes)||25)*60;startedAt=Date.now();show("exam");const mockToggle=$("mockLanguageToggle");if(mockToggle){mockToggle.style.display=paperHasBothLanguages(active.parentPaperId||active.id)?"inline-flex":"none";mockToggle.textContent=active.language==="hi"?"Switch to English":"Switch to Hindi";}$("examTitle").textContent=active.title||"SSC MTS Practice Test";$("examMeta").textContent=`${active.questions.length} Questions · ${Math.max(1,Number(active.minutes)||25)} Minutes · ${active.marks||active.questions.length*3} Marks${active.section==="mock"?` · ${active.language==="hi"?"Hindi":"English"}`:""}`;clearInterval(tick);renderTimer();tick=setInterval(()=>{if(timerPaused)return;remaining=Math.max(0,remaining-1);renderTimer();if(remaining<=0){clearInterval(tick);finishTest(true)}},1000);try{renderQuestion()}catch(err){console.error("Question render failed",err);$("qText").textContent="Could not render this question. Check this paper’s JSON file.";$("options").textContent=err.message||"Rendering error"}}
 function celebrate(correct,total){
  const overlay=document.createElement("div");overlay.className="celebrate";const colors=["#f6bd60","#84dcc6","#a78bfa","#fb7185","#60a5fa","#f97316"];
  for(let i=0;i<90;i++){const piece=document.createElement("i");piece.className="confetti";piece.style.left=Math.random()*100+"%";piece.style.background=colors[i%colors.length];piece.style.animationDelay=(Math.random()*.8)+"s";piece.style.setProperty("--drift",(Math.random()*240-120)+"px");overlay.appendChild(piece)}document.body.appendChild(overlay);
